@@ -1,4 +1,4 @@
-package ca.uwaterloo.ece.qhanam.jrsrepair.test;
+package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -26,14 +26,23 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import org.eclipse.core.resources.ResourcesPlugin;
-
-
-public class SampleUse {
+public class JRSRepair {
 	
-	public static final String SOURCE_DIRECTORY = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/src";
-
-	public static void main(String[] args) throws Exception {
+	String sourcePath;
+	
+	/**
+	 * Creates a JRSRepair object with the path to the source folder
+	 * of the program we are mutating.
+	 * @param sourcePath The path to the source folder of the program we are mutating.
+	 */
+	public JRSRepair(String sourcePath){
+		this.sourcePath = sourcePath;
+	}
+	
+	/**
+	 * Builds ASTs for all the source files.
+	 */
+	public void buildASTs() throws Exception{
 		/* TODO: We have two options: 
 		 * 	1. Set the environment using Eclipse java project and IJavaProject. 
 		 *  2. Set the environment using ASTParser.setEnvironment. */
@@ -50,7 +59,7 @@ public class SampleUse {
 		String[] sourceFilesArray;
 		
 		/* The buggy file or source code directory. */
-		File buggyFile = new File(SOURCE_DIRECTORY);
+		File buggyFile = new File(this.sourcePath);
 		
 		/* If the buggy file is a directory, get all the java files in that directory. */
 		if(buggyFile.isDirectory()){
@@ -132,5 +141,5 @@ public class SampleUse {
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
 		
 	}
-
+		
 }

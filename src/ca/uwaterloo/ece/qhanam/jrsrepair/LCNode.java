@@ -23,4 +23,24 @@ class LCNode implements Comparable<LCNode>{
 		String b = node.pathName + "." + node.className + "." + node.lineNumber;
 		return a.compareTo(b);
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof LCNode)) return false;
+		LCNode node = (LCNode) o;
+		String a = this.pathName + "." + this.className + "." + this.lineNumber;
+		String b = node.pathName + "." + node.className + "." + node.lineNumber;
+		return a.equals(b);
+	}
+	
+	@Override
+	public int hashCode(){
+		String a = this.pathName + "." + this.className + "." + this.lineNumber;
+		return a.hashCode();
+	}
+	
+	@Override
+	public String toString(){
+		return this.pathName + "." + this.className + "." + this.lineNumber;
+	}
 }

@@ -40,10 +40,14 @@ public class LineCoverage {
 		HashMap<LCNode, Double> map = new HashMap<LCNode, Double>();
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		for(String line = reader.readLine(); line != null; line = reader.readLine()){
-			String[] tokens = line.split(",");
-			if(tokens.length == 3){
+			String[] tokens = line.split(":");
+			if(tokens.length == 4){
                 LCNode node = new LCNode(tokens[0], tokens[1], Integer.valueOf(tokens[2]));
                 map.put(node, Double.valueOf(tokens[3]));
+			}
+			else{
+				reader.close();
+				throw new Exception("LineCoverage.readCoverageFile: file not formatted properly... too many tokens.");
 			}
 		}
 		reader.close();

@@ -9,7 +9,6 @@ import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 
 /**
@@ -75,8 +74,7 @@ public class MutationASTRequestor extends FileASTRequestor {
 			/* Build the LCNode to check if this statement is in the line coverage. */
 			CompilationUnit cu = (CompilationUnit) s.getRoot();
             String packageName = cu.getPackage().getName().toString();
-//            String className = ((IClassFile)cu.getTypeRoot()).getType().getFullyQualifiedName();
-            String className = cu.types().get(0).toString();
+            String className = ((AbstractTypeDeclaration)cu.types().get(0)).getName().toString();
 			int lineNumber = cu.getLineNumber(s.getStartPosition());
 			LCNode node = new LCNode(packageName, className, lineNumber);
 			
@@ -95,6 +93,26 @@ public class MutationASTRequestor extends FileASTRequestor {
 		 * We need to handle all subtypes of Statement.
 		 */
 		public boolean visit(AssertStatement node){insertStatement(node); return false;}
+		public boolean visit(Block node){insertStatement(node); return false;}
+		public boolean visit(BreakStatement node){insertStatement(node); return false;}
+		public boolean visit(ConstructorInvocation node){insertStatement(node); return false;}
+		public boolean visit(ContinueStatement node){insertStatement(node); return false;}
+		public boolean visit(DoStatement node){insertStatement(node); return false;}
+		public boolean visit(EmptyStatement node){insertStatement(node); return false;}
+		public boolean visit(ExpressionStatement node){insertStatement(node); return false;}
+		public boolean visit(ForStatement node){insertStatement(node); return false;}
+		public boolean visit(IfStatement node){insertStatement(node); return false;}
+		public boolean visit(LabeledStatement node){insertStatement(node); return false;}
+		public boolean visit(ReturnStatement node){insertStatement(node); return false;}
+		public boolean visit(SuperConstructorInvocation node){insertStatement(node); return false;}
+		public boolean visit(SwitchCase node){insertStatement(node); return false;}
+		public boolean visit(SwitchStatement node){insertStatement(node); return false;}
+		public boolean visit(SynchronizedStatement node){insertStatement(node); return false;}
+		public boolean visit(ThrowStatement node){insertStatement(node); return false;}
+		public boolean visit(TryStatement node){insertStatement(node); return false;}
+		public boolean visit(TypeDeclarationStatement node){insertStatement(node); return false;}
+		public boolean visit(VariableDeclarationStatement node){insertStatement(node); return false;}
+		public boolean visit(WhileStatement node){insertStatement(node); return false;}
 	}
 	
     /** 

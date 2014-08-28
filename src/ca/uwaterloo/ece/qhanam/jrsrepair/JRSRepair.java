@@ -15,28 +15,25 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.FileASTRequestor;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class JRSRepair {
 	
-	String sourcePath;
+	File sourcePath;
+	File faultyCoverageFile;
+	File seedCoverageFile;
 	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(String sourcePath){
+	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile){
 		this.sourcePath = sourcePath;
+		this.faultyCoverageFile = faultyCoverageFile;
+		this.seedCoverageFile = seedCoverageFile;
 	}
 	
 	/**
@@ -58,12 +55,9 @@ public class JRSRepair {
 		Collection<File> sourceFiles;
 		String[] sourceFilesArray;
 		
-		/* The buggy file or source code directory. */
-		File buggyFile = new File(this.sourcePath);
-		
 		/* If the buggy file is a directory, get all the java files in that directory. */
-		if(buggyFile.isDirectory()){
-			sourceFiles = FileUtils.listFiles(buggyFile, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
+		if(this.sourcePath.isDirectory()){
+			sourceFiles = FileUtils.listFiles(this.sourcePath, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
 			for (File javaFile : sourceFiles){
 				System.out.println(javaFile);
 			}
@@ -71,7 +65,7 @@ public class JRSRepair {
 		/* The buggy file may also be a source code file. */
 		else{
 			sourceFiles = new LinkedList<File>();
-			sourceFiles.add(buggyFile);
+			sourceFiles.add(this.sourcePath);
 		}
 		
 		/* Create the String array. */
@@ -96,40 +90,13 @@ public class JRSRepair {
 		parser.setEnvironment(new String[] {}, sourceFilesArray, null, false);
 		parser.setResolveBindings(false); // Throws an error when set to 'true' for some reason.
 		
-		FileASTRequestor fileASTRequestor = new FileASTRequestor(){
-			public void acceptBinding(String bindingKey, IBinding binding) { }
-			public void acceptAST(String sourceFilePath, CompilationUnit ast) { 
-				/* Prints all the variables declared in the class. We'll need to make 
-				 * something similar to get all the variables in the scope at some 
-				 * statement location. */
-				ast.accept(new ASTVisitor() {
-
-				    public boolean visit(VariableDeclarationFragment var) {
-
-				        System.out.println("variable: " + var.getName());
-
-				        return false;
-				    }
-
-				    public boolean visit(MethodDeclaration md) {
-
-				        if (md.getName().toString().equals("method_test2")) {
-				            md.accept(new ASTVisitor() {
-				                public boolean visit(VariableDeclarationFragment fd) {
-				                    System.out.println("in method: " + fd);
-				                    return false;
-				                }
-				            });
-				        }
-				        return false;
-				    }
-				});
-				System.out.println("AST for: " + sourceFilePath);
-				if(sourceFilePath.contains("lrucombined/LRUCache.java")){
-					System.out.println(ast.toString());
-				}
-			}
-		};
+		/* Set up the AST handler. We need to create LineCoverage and Statements classes to store 
+		 * and filter the statements from the ASTs. */
+		LineCoverage faultyLineCoverage = new LineCoverage(this.faultyCoverageFile);
+		LineCoverage seedLineCoverage = new LineCoverage(this.seedCoverageFile);
+		Statements faultyStatements = new Statements();
+		Statements seedStatements = new Statements();
+		FileASTRequestor fileASTRequestor = new MutationASTRequestor(faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
 		
 		/* createASTs(
 		 * String[] sourceFilePaths, 
@@ -140,6 +107,9 @@ public class JRSRepair {
 		 */
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
 		
+		/* Let's see what we get. */
+		System.out.print("Faulty Statements:\n" + faultyStatements.toString() + "\n\n");
+		System.out.print("Seed Statements:\n" + seedStatements.toString() + "\n\n");
 	}
 		
 }

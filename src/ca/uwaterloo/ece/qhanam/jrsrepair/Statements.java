@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.*;
 import java.util.ArrayList;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.Set;
 
 /**
  * Stores a list of statements and their weights. Randomly selects statements (with probabilities
@@ -25,6 +26,7 @@ public class Statements {
 	private double totalWeight; // We track the total weight so that we can randomly select a statement with weighting.
 
 	public Statements() { 
+		this.statements = new TreeMap();
 		this.totalWeight = 0;
     }
 	
@@ -34,7 +36,7 @@ public class Statements {
 	 * @param weight The weight used to calculate the probability of this statement being selected.
 	 * @param faulty Indicates the statement should be stored in the faulty statement list as well.
 	 */
-	public void addStatement(Statement s, int weight){
+	public void addStatement(Statement s, double weight){
         this.totalWeight += weight;
         this.statements.put(this.totalWeight, s);
 	}
@@ -49,5 +51,18 @@ public class Statements {
 		
 		/* Find the statement at that random spot. */
 		return this.statements.ceilingEntry(random).getValue();
+	}
+	
+	/**
+	 * Returns a string containing the statements in this set and their weights.
+	 */
+	@Override
+	public String toString(){
+		String s = "";
+		Set<NavigableMap.Entry<Double, Statement>> entrySet = statements.entrySet();
+		for(NavigableMap.Entry<Double, Statement> entry : entrySet){
+			s += entry.getKey() + " : " + entry.getValue() + "\n";
+		}
+		return s;
 	}
 }

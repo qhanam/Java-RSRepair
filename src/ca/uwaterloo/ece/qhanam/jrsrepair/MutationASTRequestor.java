@@ -1,5 +1,8 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.util.List;
+
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IClassFile;
@@ -20,6 +23,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
  */
 public class MutationASTRequestor extends FileASTRequestor {
 	
+    private LineCoverage faultyLineCoverage;
+    private LineCoverage seedLineCoverage;
 	private Statements faultyStatements;
 	private Statements seedStatements;
 	
@@ -29,7 +34,9 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 * @param faultyStatements
 	 * @param seedStatements
 	 */
-	public MutationASTRequestor(Statements faultyStatements, Statements seedStatements){
+	public MutationASTRequestor(LineCoverage faultyLineCoverage, LineCoverage seedLineCoverage, Statements faultyStatements, Statements seedStatements){
+		this.faultyLineCoverage = faultyLineCoverage;
+		this.seedLineCoverage = seedLineCoverage;
 		this.faultyStatements = faultyStatements;
 		this.seedStatements = seedStatements;
 	}
@@ -43,13 +50,9 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 * TODO: Store the test case coverage as member variables. Need to be read from a file (produced by JaCoCo).
 	 */
 	public void acceptAST(String sourceFilePath, CompilationUnit cu) { 
-		/* A demo of how to get the package and class from a CompilationUnit. */
-		String cuPackage = cu.getPackage().getName().toString();
-		String cuClass = ((IClassFile)cu.getTypeRoot()).getType().getFullyQualifiedName();
-
-		/* Store the statements that are covered by test cases. */
-		StatementASTVisitor statementASTVisitor = new StatementASTVisitor(this.faultyStatements, this.seedStatements);
-		cu.accept(statementASTVisitor);
+        /* Store the statements that are covered by test cases. */
+        StatementASTVisitor statementASTVisitor = new StatementASTVisitor();
+        cu.accept(statementASTVisitor);
 
 		/* A demo of how to get variables in a class scope. */
 		cu.accept(new VarASTVisitor());
@@ -61,25 +64,31 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 * @author qhanam
 	 *
 	 */
-	private class StatementASTVisitor extends ASTVisitor{
-		private Statements faultyStatements;
-		private Statements seedStatements;
-		
-		public StatementASTVisitor(Statements faultyStatements, Statements seedStatements){
-			super();
-			this.faultyStatements = faultyStatements;
-			this.seedStatements = seedStatements;
-		}
+	private class StatementASTVisitor extends ASTVisitor {
 		
 		/**
 		 * Checks a statement against the coverage lists and inserts valid statements.
 		 * 
-		 * TODO: Check against coverage lists.
 		 * @param s
 		 */
 		private void insertStatement(Statement s){
-			this.faultyStatements.addStatement(s, 1);
-			this.seedStatements.addStatement(s, 1);
+			/* Build the LCNode to check if this statement is in the line coverage. */
+			CompilationUnit cu = (CompilationUnit) s.getRoot();
+            String packageName = cu.getPackage().getName().toString();
+//            String className = ((IClassFile)cu.getTypeRoot()).getType().getFullyQualifiedName();
+            String className = cu.types().get(0).toString();
+			int lineNumber = cu.getLineNumber(s.getStartPosition());
+			LCNode node = new LCNode(packageName, className, lineNumber);
+			
+			/* Check if this statement has been covered. If so add it to the appropriate statement 
+			 * list with its weight. */
+			Double weight;
+			if((weight = MutationASTRequestor.this.faultyLineCoverage.contains(node)) != null){
+                MutationASTRequestor.this.faultyStatements.addStatement(s, weight);
+			}
+			if((weight = MutationASTRequestor.this.seedLineCoverage.contains(node)) != null){
+                MutationASTRequestor.this.seedStatements.addStatement(s, 1);
+			}
 		}
 		
 		/**

@@ -54,7 +54,7 @@ public class MutationASTRequestor extends FileASTRequestor {
         cu.accept(statementASTVisitor);
 
 		/* A demo of how to get variables in a class scope. */
-		cu.accept(new VarASTVisitor());
+		//cu.accept(new VarASTVisitor());
 	}
 	
 	/**
@@ -80,6 +80,7 @@ public class MutationASTRequestor extends FileASTRequestor {
 			
 			/* Check if this statement has been covered. If so add it to the appropriate statement 
 			 * list with its weight. */
+			System.out.println(node);
 			Double weight;
 			if((weight = MutationASTRequestor.this.faultyLineCoverage.contains(node)) != null){
                 MutationASTRequestor.this.faultyStatements.addStatement(s, weight);
@@ -92,27 +93,27 @@ public class MutationASTRequestor extends FileASTRequestor {
 		/**
 		 * We need to handle all subtypes of Statement.
 		 */
-		public boolean visit(AssertStatement node){insertStatement(node); return false;}
-		public boolean visit(Block node){insertStatement(node); return false;}
-		public boolean visit(BreakStatement node){insertStatement(node); return false;}
-		public boolean visit(ConstructorInvocation node){insertStatement(node); return false;}
-		public boolean visit(ContinueStatement node){insertStatement(node); return false;}
-		public boolean visit(DoStatement node){insertStatement(node); return false;}
-		public boolean visit(EmptyStatement node){insertStatement(node); return false;}
-		public boolean visit(ExpressionStatement node){insertStatement(node); return false;}
-		public boolean visit(ForStatement node){insertStatement(node); return false;}
-		public boolean visit(IfStatement node){insertStatement(node); return false;}
-		public boolean visit(LabeledStatement node){insertStatement(node); return false;}
-		public boolean visit(ReturnStatement node){insertStatement(node); return false;}
-		public boolean visit(SuperConstructorInvocation node){insertStatement(node); return false;}
-		public boolean visit(SwitchCase node){insertStatement(node); return false;}
-		public boolean visit(SwitchStatement node){insertStatement(node); return false;}
-		public boolean visit(SynchronizedStatement node){insertStatement(node); return false;}
-		public boolean visit(ThrowStatement node){insertStatement(node); return false;}
-		public boolean visit(TryStatement node){insertStatement(node); return false;}
-		public boolean visit(TypeDeclarationStatement node){insertStatement(node); return false;}
-		public boolean visit(VariableDeclarationStatement node){insertStatement(node); return false;}
-		public boolean visit(WhileStatement node){insertStatement(node); return false;}
+		public boolean visit(AssertStatement node){insertStatement(node); return true;}
+		//public boolean visit(Block node){insertStatement(node); return true;}
+		public boolean visit(BreakStatement node){insertStatement(node); return true;}
+		public boolean visit(ConstructorInvocation node){insertStatement(node); return true;}
+		public boolean visit(ContinueStatement node){insertStatement(node); return true;}
+		public boolean visit(DoStatement node){insertStatement(node); return true;}
+		public boolean visit(EmptyStatement node){insertStatement(node); return true;}
+		public boolean visit(ExpressionStatement node){insertStatement(node); return true;}
+		public boolean visit(ForStatement node){insertStatement(node); return true;}
+		public boolean visit(IfStatement node){insertStatement(node); return true;}
+		public boolean visit(LabeledStatement node){insertStatement(node); return true;}
+		public boolean visit(ReturnStatement node){insertStatement(node); return true;}
+		public boolean visit(SuperConstructorInvocation node){insertStatement(node); return true;}
+		public boolean visit(SwitchCase node){insertStatement(node); return true;}
+		public boolean visit(SwitchStatement node){insertStatement(node); return true;}
+		public boolean visit(SynchronizedStatement node){insertStatement(node); return true;}
+		public boolean visit(ThrowStatement node){insertStatement(node); return true;}
+		public boolean visit(TryStatement node){insertStatement(node); return true;}
+		public boolean visit(TypeDeclarationStatement node){insertStatement(node); return true;}
+		public boolean visit(VariableDeclarationStatement node){insertStatement(node); return true;}
+		public boolean visit(WhileStatement node){insertStatement(node); return true;}
 	}
 	
     /** 

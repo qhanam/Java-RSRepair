@@ -19,6 +19,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
+
 public class JRSRepair {
 	
 	File sourcePath;
@@ -107,9 +109,22 @@ public class JRSRepair {
 		 */
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
 		
-		/* Let's see what we get. */
-		System.out.print("Faulty Statements:\n" + faultyStatements.toString() + "\n\n");
-		System.out.print("Seed Statements:\n" + seedStatements.toString() + "\n\n");
+		/* The statements should be in the map. */
+//		System.out.print("Faulty Statements:\n" + faultyStatements.toString() + "\n\n");
+//		System.out.print("Seed Statements:\n" + seedStatements.toString() + "\n\n");
+		
+//		for(int j = 0; j < 10; j++) {
+//            System.out.print("Statement " + j + " :" + faultyStatements.getRandomStatement());
+//		}
+		
+		/* TODO: Mutate the program. */
+		for(int j = 0; j < 10; j++){
+			IMutation mutation = new AdditionMutation();
+			mutation.mutate(faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+		}
+		
+		/* TODO: Compile and execute the program. */
+		
 	}
 		
 }

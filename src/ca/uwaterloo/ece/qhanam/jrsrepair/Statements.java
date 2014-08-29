@@ -2,7 +2,6 @@ package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.Set;
@@ -26,7 +25,7 @@ public class Statements {
 	private double totalWeight; // We track the total weight so that we can randomly select a statement with weighting.
 
 	public Statements() { 
-		this.statements = new TreeMap();
+		this.statements = new TreeMap<Double, Statement>();
 		this.totalWeight = 0;
     }
 	
@@ -61,7 +60,7 @@ public class Statements {
 		String s = "";
 		Set<NavigableMap.Entry<Double, Statement>> entrySet = statements.entrySet();
 		for(NavigableMap.Entry<Double, Statement> entry : entrySet){
-			s += entry.getKey() + " : " + entry.getValue() + "\n";
+			s += (Math.round(entry.getKey()*10.0)/10.0) + " : " + entry.getValue() + "\n";
 		}
 		return s;
 	}

@@ -127,7 +127,7 @@ public class JRSRepair {
 //		}
 		
 		/* TODO: Mutate the program. */
-		for(int j = 0; j < 10; j++){
+		for(int j = 0; j < 1; j++){
 			Mutation mutation = new AdditionMutation(sourceFileContents);
 			mutation.mutate(faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
 		}

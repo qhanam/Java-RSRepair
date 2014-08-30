@@ -1,7 +1,9 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.mutation;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
+
 import org.eclipse.jdt.core.dom.*;
+
 import java.util.HashMap;
 
 public abstract class Mutation {
@@ -20,6 +22,7 @@ public abstract class Mutation {
 	 * Uses the seed statement to apply a mutation to the faulty statement.
 	 * @param faulty A potentially faulty statement.
 	 * @param seed A seed statement (from somewhere in the program source).
+	 * @throws Exception 
 	 */
-	public abstract void mutate(SourceStatement faulty, SourceStatement seed);
+	public abstract void mutate(SourceStatement faulty, SourceStatement seed) throws Exception;
 }

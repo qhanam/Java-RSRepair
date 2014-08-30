@@ -3,6 +3,7 @@ package ca.uwaterloo.ece.qhanam.jrsrepair.mutation;
 import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.jdt.core.dom.rewrite.*;
 import org.eclipse.jdt.core.dom.*;
@@ -21,7 +22,7 @@ public class AdditionMutation extends Mutation {
 	 * faulty statement. 
 	 */
 	@Override
-	public void mutate(SourceStatement faulty, SourceStatement seed) {
+	public void mutate(SourceStatement faulty, SourceStatement seed) throws Exception {
 		/* Strategy:
 		 * Each block contains an ordered list of ASTNodes. We need to insert the seed node 
 		 * into that list before the faulty node. We can use ASTRewrite to perform the 
@@ -39,24 +40,41 @@ public class AdditionMutation extends Mutation {
 		
 		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
 		 * is a Block statement */
-		AST ast = faulty.statement.getAST();
+		AST ast = faulty.statement.getRoot().getAST();
 		ASTRewrite rewrite = ASTRewrite.create(ast);
+
+		System.out.println("-------");
+		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
+		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
+		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
 		
 		if(parent instanceof Block){
+            /* Fetch the document from the map. */
+            IDocument document = (IDocument) this.sourceMap.get(faulty.sourceFile);
+            System.out.print(document.get());
+
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
+            List<ASTNode> nodes = (List<ASTNode>) lrw.getOriginalList();
+            System.out.println("Faulty: " + faulty.statement);
+            for(ASTNode node : nodes){
+            	System.out.println("ListRewrite Node: " + node);
+            }
             // Can we do this: rewrite.createCopyTarget(seed)? It may be in a different AST...
-            lrw.insertBefore(faulty.statement, rewrite.createCopyTarget(seed.statement), new TextEditGroup("TextEditGroup"));
+            ASTNode s = rewrite.createCopyTarget(seed.statement);
+            lrw.insertBefore(rewrite.createCopyTarget(faulty.statement), faulty.statement, new TextEditGroup("TextEditGroup"));
+            
+            TextEdit edits = rewrite.rewriteAST(document, null);
+            UndoEdit undo = edits.apply(document);
+
+            System.out.print(document.get());
 		}
+		
 		
 		/* TEMP */
 		ChildPropertyDescriptor cpd = IfStatement.THEN_STATEMENT_PROPERTY;
 		/* TEMP */
 		
-		System.out.println("-------");
-		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
-		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
-		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
 		
 		//parent.setStructuralProperty(new ChildPropertyDescriptor(), new Object());
 	}

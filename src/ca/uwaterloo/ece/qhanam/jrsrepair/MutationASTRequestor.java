@@ -50,7 +50,7 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 */
 	public void acceptAST(String sourceFilePath, CompilationUnit cu) { 
         /* Store the statements that are covered by test cases. */
-        StatementASTVisitor statementASTVisitor = new StatementASTVisitor();
+        StatementASTVisitor statementASTVisitor = new StatementASTVisitor(sourceFilePath);
         cu.accept(statementASTVisitor);
 
 		/* A demo of how to get variables in a class scope. */
@@ -64,6 +64,12 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 *
 	 */
 	private class StatementASTVisitor extends ASTVisitor {
+		
+		String sourceFilePath;
+		
+		public StatementASTVisitor(String sourceFilePath){
+			this.sourceFilePath = sourceFilePath;
+		}
 		
 		/**
 		 * Checks a statement against the coverage lists and inserts valid statements.
@@ -83,10 +89,10 @@ public class MutationASTRequestor extends FileASTRequestor {
 			System.out.println(node);
 			Double weight;
 			if((weight = MutationASTRequestor.this.faultyLineCoverage.contains(node)) != null){
-                MutationASTRequestor.this.faultyStatements.addStatement(s, weight);
+                MutationASTRequestor.this.faultyStatements.addStatement(new SourceStatement(this.sourceFilePath, s), weight);
 			}
 			if((weight = MutationASTRequestor.this.seedLineCoverage.contains(node)) != null){
-                MutationASTRequestor.this.seedStatements.addStatement(s, 1);
+                MutationASTRequestor.this.seedStatements.addStatement(new SourceStatement(this.sourceFilePath, s), 1);
 			}
 		}
 		

@@ -21,11 +21,11 @@ import java.util.Set;
  */
 public class Statements {
 	
-	private NavigableMap<Double, Statement> statements;
+	private NavigableMap<Double, SourceStatement> statements;
 	private double totalWeight; // We track the total weight so that we can randomly select a statement with weighting.
 
 	public Statements() { 
-		this.statements = new TreeMap<Double, Statement>();
+		this.statements = new TreeMap<Double, SourceStatement>();
 		this.totalWeight = 0;
     }
 	
@@ -35,7 +35,7 @@ public class Statements {
 	 * @param weight The weight used to calculate the probability of this statement being selected.
 	 * @param faulty Indicates the statement should be stored in the faulty statement list as well.
 	 */
-	public void addStatement(Statement s, double weight){
+	public void addStatement(SourceStatement s, double weight){
         this.totalWeight += weight;
         this.statements.put(this.totalWeight, s);
 	}
@@ -44,7 +44,7 @@ public class Statements {
 	 * Randomly selects and returns a faulty statement (to be mutated).
 	 * @return The faulty statement to be mutated.
 	 */
-	public Statement getRandomStatement(){
+	public SourceStatement getRandomStatement(){
 		/* Compute a random spot. */
 		double random = Math.random() * this.totalWeight;
 		
@@ -58,8 +58,8 @@ public class Statements {
 	@Override
 	public String toString(){
 		String s = "";
-		Set<NavigableMap.Entry<Double, Statement>> entrySet = statements.entrySet();
-		for(NavigableMap.Entry<Double, Statement> entry : entrySet){
+		Set<NavigableMap.Entry<Double, SourceStatement>> entrySet = statements.entrySet();
+		for(NavigableMap.Entry<Double, SourceStatement> entry : entrySet){
 			s += (Math.round(entry.getKey()*10.0)/10.0) + " : " + entry.getValue() + "\n";
 		}
 		return s;

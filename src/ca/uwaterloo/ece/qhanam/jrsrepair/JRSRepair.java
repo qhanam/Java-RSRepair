@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.CharBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -18,6 +22,8 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
@@ -78,6 +84,9 @@ public class JRSRepair {
 			i++;
 		}
 		
+		/* Create the map of file paths to file contents (Document) */
+		HashMap<String, IDocument> sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
+		
 		/* Create the ASTParser with the source files to generate ASTs for, and set up the
 		 * environment using ASTParser.setEnvironment.
 		 */
@@ -119,12 +128,27 @@ public class JRSRepair {
 		
 		/* TODO: Mutate the program. */
 		for(int j = 0; j < 10; j++){
-			IMutation mutation = new AdditionMutation();
+			Mutation mutation = new AdditionMutation(sourceFileContents);
 			mutation.mutate(faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
 		}
 		
 		/* TODO: Compile and execute the program. */
 		
+	}
+	
+	/**
+	 * Builds a HashMap with Java file paths as keys and Java file text contents as values.
+	 * @param sourceFilesArray
+	 * @return A HashMap containing the text of the source Java files.
+	 */
+	private static HashMap<String, IDocument> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
+		HashMap<String, IDocument> map = new HashMap<String, IDocument>();
+		for(String sourceFile : sourceFilesArray){
+            byte[] encoded = Files.readAllBytes(Paths.get(sourceFile));
+            IDocument contents = new Document(new String(encoded));
+            map.put(sourceFile, contents);
+		}
+		return map;
 	}
 		
 }

@@ -29,7 +29,7 @@ public class DeletionMutation extends Mutation {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void mutate() throws Exception {
+	public void concreteMutate() throws Exception {
 		ASTNode parent = faulty.statement.getParent();
 
 		System.out.println("------- Deletion Mutation");
@@ -72,12 +72,13 @@ public class DeletionMutation extends Mutation {
 	 * Removes the statement added in mutate().
 	 */
 	@Override
-	public void undo() throws Exception{
+	public void concreteUndo() throws Exception{
 		if(this.deletedStatement == null || this.undoEdit == null || this.listRewriter == null) return; // Nothing to do.
         
         /* Undo the edit to the AST. */
 		this.listRewriter.insertAt(this.deletedStatement, this.deletedStatementIndex, null);
         this.undoEdit.apply(this.document);
+        this.undoEdit = null;
         
         System.out.print(this.document.get());
 	}

@@ -11,6 +11,7 @@ import java.util.HashMap;
 public abstract class Mutation {
 	
 	protected HashMap<String, DocumentASTRewrite> sourceMap;
+    DocumentASTRewrite docrwt;
 	protected SourceStatement faulty;
 	protected SourceStatement seed;
 	protected IDocument document;
@@ -23,7 +24,7 @@ public abstract class Mutation {
 	 * @param seed A seed statement (from somewhere in the program source).
 	 */
 	public Mutation(HashMap<String, DocumentASTRewrite> sourceMap, SourceStatement faulty, SourceStatement seed){
-		DocumentASTRewrite docrwt = sourceMap.get(faulty.sourceFile);
+		this.docrwt = sourceMap.get(faulty.sourceFile);
 		this.rewrite = docrwt.rewriter;
 		this.document = docrwt.document;
 		this.sourceMap = sourceMap;
@@ -35,9 +36,13 @@ public abstract class Mutation {
 	 * Uses the seed statement to apply a mutation to the faulty statement.
 	 * @throws Exception 
 	 */
-	public abstract void mutate() throws Exception;
-	
+	public void mutate() throws Exception {
+		this.docrwt.taintDocument();
+		this.concreteMutate();
+	}
 
+	protected abstract void concreteMutate() throws Exception;
+	
 	/**
 	 * Undoes the mutation that was applied in mutate().
 	 * 
@@ -46,6 +51,10 @@ public abstract class Mutation {
 	 * 
 	 * Best used with memento pattern.
 	 */
-	public abstract void undo() throws Exception;
-	
+	public void undo() throws Exception {
+		this.docrwt.taintDocument();
+		this.concreteUndo();
+	}
+
+	protected abstract void concreteUndo() throws Exception;
 }

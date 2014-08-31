@@ -12,9 +12,23 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 public class DocumentASTRewrite {
 	public IDocument document;
 	public ASTRewrite rewriter;
+	private boolean tainted;
 
 	public DocumentASTRewrite(IDocument document, ASTRewrite rewriter){
 		this.document = document;
 		this.rewriter = rewriter;
+		this.tainted = false;
+	}
+	
+	public void taintDocument(){
+		this.tainted = true;
+	}
+	
+	public void untaintDocument(){
+		this.tainted = false;
+	}
+	
+	public boolean isDocumentTainted(){
+		return this.tainted;
 	}
 }

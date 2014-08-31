@@ -155,6 +155,8 @@ public class JRSRepair {
 	
 	/* TODO: Should we move this to another class or is it ok here? */
 	private void testCurrentMutation(){
+		/* TODO: Write the source file changes back to disk. Maybe use taint tracking for this? */
+		
 		/* TODO: Compile and execute the program. */
 	}
 	

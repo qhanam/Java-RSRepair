@@ -21,7 +21,7 @@ public class ReplacementMutation extends Mutation {
 	 * Replaces the faulty statement with the seed statement.
 	 */
 	@Override
-	public void mutate() throws Exception {
+	public void concreteMutate() throws Exception {
 		ASTNode parent = faulty.statement.getParent();
 		
 		/* Start by assuming all parents are block statements. Later we can search for an ancestor that
@@ -56,7 +56,7 @@ public class ReplacementMutation extends Mutation {
 	 * Replace the seed statement with the faulty statement.
 	 */
 	@Override
-	public void undo() throws Exception{
+	public void concreteUndo() throws Exception{
 		if(this.undoEdit == null) return; // Nothing to do.
         
         /* Undo the edit to the AST. */

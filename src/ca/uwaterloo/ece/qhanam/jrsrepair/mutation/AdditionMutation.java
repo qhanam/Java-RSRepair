@@ -23,7 +23,7 @@ public class AdditionMutation extends Mutation {
 	 * faulty statement. 
 	 */
 	@Override
-	public void mutate() throws Exception {
+	public void concreteMutate() throws Exception {
 		ASTNode parent = faulty.statement.getParent();
 		
 		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
@@ -63,12 +63,13 @@ public class AdditionMutation extends Mutation {
 	 * Removes the statement added in mutate().
 	 */
 	@Override
-	public void undo() throws Exception{
+	public void concreteUndo() throws Exception{
 		if(this.addedStatement == null || this.undoEdit == null) return; // Nothing to do.
         
         /* Undo the edit to the AST. */
         this.rewrite.remove(this.addedStatement, null);
         this.undoEdit.apply(this.document);
+        this.undoEdit = null;
         
         System.out.print(this.document.get());
 	}

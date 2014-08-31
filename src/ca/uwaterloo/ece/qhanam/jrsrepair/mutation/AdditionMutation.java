@@ -1,6 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.mutation;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
+import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,40 +9,29 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.rewrite.*;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.text.edits.*;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.Document;
 
 public class AdditionMutation extends Mutation {
 	
-	public AdditionMutation(HashMap<String, IDocument> sourceFileContents){
-		super(sourceFileContents);
+	private ASTNode addedStatement; // The (copied) seed statement that was added before the faulty statement.
+	private UndoEdit undoEdit;		// Memento to undo the text edit performed on the this.document.
+	
+	public AdditionMutation(HashMap<String, DocumentASTRewrite> sourceFileContents, SourceStatement faulty, SourceStatement seed){
+		super(sourceFileContents, faulty, seed);
 	}
 
 	/**
 	 * Adds the seed statement to the AST right before the 
 	 * faulty statement. 
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public void mutate(SourceStatement faulty, SourceStatement seed) throws Exception {
-		/* Strategy:
-		 * Each block contains an ordered list of ASTNodes. We need to insert the seed node 
-		 * into that list before the faulty node. We can use ASTRewrite to perform the 
-		 * operations, write the changes to a Document and revert back.
-		 * 
-		 * Question: 	For statement addition, when we insert a statement into a node with
-		 * 			 	parent type IF_STATEMENT, where does it insert? Before the if statement
-		 * 			 	or can we not do this because there is no list?
-		 * 
-		 * Answer: 		I think we need to find an ancestor statement of type Block in order
-		 * 				to get a list of statements. Otherwise, we can't use ListRewrite.
-		 */
+	public void mutate() throws Exception {
+		/* TODO: Find the nearest ancestor that is a Block statement. */
 		ASTNode parent = faulty.statement.getParent();
-		StructuralPropertyDescriptor location = faulty.statement.getLocationInParent();
 		
 		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
 		 * is a Block statement */
 		AST ast = faulty.statement.getRoot().getAST();
-		ASTRewrite rewrite = ASTRewrite.create(ast);
 
 		System.out.println("-------");
 		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
@@ -49,10 +39,6 @@ public class AdditionMutation extends Mutation {
 		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
 		
 		if(parent instanceof Block){
-            /* Fetch the document from the map. */
-            IDocument document = (IDocument) this.sourceMap.get(faulty.sourceFile);
-            System.out.print(document.get());
-
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
             List<ASTNode> nodes = (List<ASTNode>) lrw.getOriginalList();
@@ -61,39 +47,36 @@ public class AdditionMutation extends Mutation {
             for(ASTNode node : nodes){
             	System.out.println("ListRewrite Node: " + node);
             }
-            // Can we do this: rewrite.createCopyTarget(seed)? It may be in a different AST...
-//            ASTNode s = rewrite.createCopyTarget(faulty.statement);
-//            ASTNode s = rewrite.createCopyTarget(seed.statement);
-            ASTNode s = ASTNode.copySubtree(ast, seed.statement);
-            lrw.insertBefore(s, faulty.statement, new TextEditGroup("TextEditGroup"));
             
-            TextEdit edits = rewrite.rewriteAST(document, null);
-            UndoEdit undo = edits.apply(document, TextEdit.CREATE_UNDO);
-            System.out.print(document.get());
-            undo = undo.apply(document);
-            System.out.print(document.get());
+            /* Make a copy of the seed statement and base it in the faulty statement's AST. */
+            ASTNode s = ASTNode.copySubtree(ast, seed.statement);
+            
+            /* Store the added statement so we can undo the operation. */
+            this.addedStatement = s;
+            
+            /* Insert the statement into the AST before the faulty statement. */
+            lrw.insertBefore(s, faulty.statement, new TextEditGroup("TextEditGroup"));
 
+            /* Modify the source code file. */
+            TextEdit edits = rewrite.rewriteAST(this.document, null);
+            this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
+
+            System.out.print(this.document.get());
 		}
-		
-		
-		/* TEMP */
-		ChildPropertyDescriptor cpd = IfStatement.THEN_STATEMENT_PROPERTY;
-		/* TEMP */
-		
-		
-		//parent.setStructuralProperty(new ChildPropertyDescriptor(), new Object());
 	}
 	
 	/**
-	 * Undoes the mutation that was applied in mutate().
-	 * 
-	 * This will undo both the change to the text file (Document) as
-	 * well as the change to the AST. 
-	 * 
-	 * Best used with memento pattern.
+	 * Removes the statement added in mutate().
 	 */
-	public void undo(){
-		
+	@Override
+	public void undo() throws Exception{
+		if(this.addedStatement == null || this.undoEdit == null) throw new Exception("No mutation has been applied.");
+        
+        /* Undo the edit to the AST. */
+        this.rewrite.remove(this.addedStatement, null);
+        this.undoEdit.apply(this.document);
+        
+        System.out.print(this.document.get());
 	}
 
 }

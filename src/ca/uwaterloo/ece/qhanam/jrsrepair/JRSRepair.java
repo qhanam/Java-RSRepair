@@ -48,18 +48,6 @@ public class JRSRepair {
 	 * Builds ASTs for all the source files.
 	 */
 	public void buildASTs() throws Exception{
-		/* TODO: We have two options: 
-		 * 	1. Set the environment using Eclipse java project and IJavaProject. 
-		 *  2. Set the environment using ASTParser.setEnvironment. */
-		
-		/* We first need to get the set of source files for which to build ASTs. Which files
-		 * we create ASTs for depends on:
-		 * 	1. The potentially faulty statements from fault localization.
-		 * 	2. The candidate seed statements.
-		 * To start, we assume our candidate seed statements can come from any part of the
-		 * program's source code (external libraries are excluded).
-		 */
-
 		Collection<File> sourceFiles;
 		String[] sourceFilesArray;
 		
@@ -85,7 +73,7 @@ public class JRSRepair {
 		}
 		
 		/* Create the map of file paths to file contents (Document) */
-		HashMap<String, IDocument> sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
+		HashMap<String, DocumentASTRewrite> sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
 		
 		/* Create the ASTParser with the source files to generate ASTs for, and set up the
 		 * environment using ASTParser.setEnvironment.
@@ -96,8 +84,7 @@ public class JRSRepair {
 		 * String[] classpathEntries,
 		 * String[] sourcepathEntries, 
 		 * String[] encodings,
-		 * boolean includeRunningVMBootclasspath)
-		 */
+		 * boolean includeRunningVMBootclasspath) */
 		parser.setEnvironment(new String[] {}, sourceFilesArray, null, false);
 		parser.setResolveBindings(false); // Throws an error when set to 'true' for some reason.
 		
@@ -107,29 +94,23 @@ public class JRSRepair {
 		LineCoverage seedLineCoverage = new LineCoverage(this.seedCoverageFile);
 		Statements faultyStatements = new Statements();
 		Statements seedStatements = new Statements();
-		FileASTRequestor fileASTRequestor = new MutationASTRequestor(faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
+		FileASTRequestor fileASTRequestor = new MutationASTRequestor(sourceFileContents, faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
 		
 		/* createASTs(
 		 * String[] sourceFilePaths, 
 		 * String[] encodings, - the source file encodings (e.g., "ASCII", "UTF8", "UTF-16"). Can be set to null if platform encoding is sufficient.
 		 * String[] bindingKeys, 
 		 * FileASTRequestor requestor, 
-		 * IProgressMonitor monitor) 
-		 */
+		 * IProgressMonitor monitor) */
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
-		
-		/* The statements should be in the map. */
-//		System.out.print("Faulty Statements:\n" + faultyStatements.toString() + "\n\n");
-//		System.out.print("Seed Statements:\n" + seedStatements.toString() + "\n\n");
-		
-//		for(int j = 0; j < 10; j++) {
-//            System.out.print("Statement " + j + " :" + faultyStatements.getRandomStatement());
-//		}
 		
 		/* TODO: Mutate the program. */
 		for(int j = 0; j < 1; j++){
-			Mutation mutation = new AdditionMutation(sourceFileContents);
-			mutation.mutate(faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			mutation.mutate();
+			mutation.undo();
+			mutation.mutate();
+			mutation.undo();
 		}
 		
 		/* TODO: Compile and execute the program. */
@@ -141,12 +122,13 @@ public class JRSRepair {
 	 * @param sourceFilesArray
 	 * @return A HashMap containing the text of the source Java files.
 	 */
-	private static HashMap<String, IDocument> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
-		HashMap<String, IDocument> map = new HashMap<String, IDocument>();
+	private static HashMap<String, DocumentASTRewrite> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
+		HashMap<String, DocumentASTRewrite> map = new HashMap<String, DocumentASTRewrite>();
 		for(String sourceFile : sourceFilesArray){
             byte[] encoded = Files.readAllBytes(Paths.get(sourceFile));
             IDocument contents = new Document(new String(encoded));
-            map.put(sourceFile, contents);
+            DocumentASTRewrite docrw = new DocumentASTRewrite(contents, null);
+            map.put(sourceFile, docrw);
 		}
 		return map;
 	}

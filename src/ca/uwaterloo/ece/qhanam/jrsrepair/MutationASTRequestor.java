@@ -1,5 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.jdt.core.ITypeRoot;
@@ -8,6 +9,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.compiler.IProblem;
 
 
@@ -22,39 +24,40 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public class MutationASTRequestor extends FileASTRequestor {
 	
+	private HashMap<String, DocumentASTRewrite> sourceFileContents;
     private LineCoverage faultyLineCoverage;
     private LineCoverage seedLineCoverage;
 	private Statements faultyStatements;
 	private Statements seedStatements;
 	
 	/**
-	 * TODO: We need to also accept lists of faulty statements and seed statements from
-	 * 		 code coverage analysis of the passing and failing test cases.
 	 * @param faultyStatements
 	 * @param seedStatements
 	 */
-	public MutationASTRequestor(LineCoverage faultyLineCoverage, LineCoverage seedLineCoverage, Statements faultyStatements, Statements seedStatements){
+	public MutationASTRequestor(HashMap<String, DocumentASTRewrite> sourceFileContents, LineCoverage faultyLineCoverage, LineCoverage seedLineCoverage, Statements faultyStatements, Statements seedStatements){
+		this.sourceFileContents = sourceFileContents;
 		this.faultyLineCoverage = faultyLineCoverage;
 		this.seedLineCoverage = seedLineCoverage;
 		this.faultyStatements = faultyStatements;
 		this.seedStatements = seedStatements;
 	}
 	
+	@Override
 	public void acceptBinding(String bindingKey, IBinding binding) { }
 
 	/**
 	 * Handles new ASTs that are generated from parsing a list of source
 	 * code files.
-	 * 
-	 * TODO: Store the test case coverage as member variables. Need to be read from a file (produced by JaCoCo).
 	 */
+	@Override
 	public void acceptAST(String sourceFilePath, CompilationUnit cu) { 
+		/* Create an ASTRewriter to track the this file's mutations. */
+		AST ast = cu.getAST();
+		this.sourceFileContents.get(sourceFilePath).rewriter = ASTRewrite.create(ast);
+		
         /* Store the statements that are covered by test cases. */
         StatementASTVisitor statementASTVisitor = new StatementASTVisitor(sourceFilePath);
         cu.accept(statementASTVisitor);
-
-		/* A demo of how to get variables in a class scope. */
-		//cu.accept(new VarASTVisitor());
 	}
 	
 	/**

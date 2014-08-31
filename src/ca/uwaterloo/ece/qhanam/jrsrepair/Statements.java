@@ -64,4 +64,13 @@ public class Statements {
 		}
 		return s;
 	}
+	
+	/**
+	 * Checks if the statement list is empty.
+	 * @return True if there are zero elements in the statement map.
+	 */
+	public boolean isEmpty(){
+		if(this.statements.size() == 0) return true;
+		return false;
+	}
 }

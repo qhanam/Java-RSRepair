@@ -32,19 +32,24 @@ public class JRSRepair {
 	private LineCoverage faultyLineCoverage;
 	private LineCoverage seedLineCoverage;
 
+	private int mutationIterations;
+	private int mutationDepth;
 	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile) throws Exception{
+	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth) throws Exception{
 		this.faultyStatements = new Statements();
 		this.seedStatements = new Statements();
 
 		this.sourcePath = sourcePath;
 		this.faultyCoverageFile = faultyCoverageFile;
 		this.seedCoverageFile = seedCoverageFile;
+		
+		this.mutationIterations = mutationIterations;
+		this.mutationDepth = mutationDepth;
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);
@@ -87,6 +92,14 @@ public class JRSRepair {
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
 	}
 	
+	/**
+	 * Attempts to repair the program using the RSRepair method.
+	 * @throws Exception
+	 */
+	public void repair() throws Exception{
+		if(this.sourceFileContents.isEmpty() || this.faultyStatements.isEmpty() || this.seedStatements.isEmpty()) throw new Exception("The ASTs have not been built.");
+		this.mutationIteration(0);
+	}
 
 	/**
 	 * The main method for trying a mutation. It performs all the operations needed 
@@ -94,41 +107,54 @@ public class JRSRepair {
 	 * attempts multiple mutations at a time before rolling back their changes. 
 	 * @param depth The number of mutations that have already been applied.
 	 */
-	public void mutationIteration(int depth){
-		for(int i = 0; i < 10; i++){ // TODO: Set the number of iterations as a parameter.
-			// Select a random mutation
+	private void mutationIteration(int depth) throws Exception{
+		for(int i = 0; i < this.mutationIterations; i++){ 
+			/* Get a random mutation operation to apply. */
+			Mutation mutation = this.getRandomMutation();
 			
-			// Apply the mutation
+			/* Apply the mutation to the AST + Document. */
+			mutation.mutate();
 			
-			// Store the mutation memento
-			
-			// Compile the program and execute the test cases
+			/* Compile the program and execute the test cases. */
+			this.testCurrentMutation();
 			
 			// Store the results
 			
-			if(depth < 3){ // TODO: Set the maximum depth as a parameter
+			/* Recurse to the next level of mutations. */
+			if(depth < this.mutationDepth){ 
 				this.mutationIteration(depth + 1);
 			}
 			
-			// Roll back the current mutation
-		}
-	}
-	
-	/* TODO: Should we move this to another class or is it ok here? */
-	public void mutate() throws Exception{
-		for(int j = 0; j < 1; j++){
-//			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
-//			Mutation mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
-			Mutation mutation = new ReplacementMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
-			mutation.mutate();
-			mutation.undo();
-			mutation.mutate();
+			/* Roll back the current mutation. */
 			mutation.undo();
 		}
 	}
 	
+	/**
+	 * Returns a random mutation operation.
+	 * @return A Mutation memento object for applying one mutation to a faulty statement.
+	 */
+	private Mutation getRandomMutation(){
+		Mutation mutation;
+		int index = (new Double(Math.ceil((Math.random() * 3)))).intValue();
+		
+		switch(index){
+		case 1:
+			mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			break;
+		case 2:
+			mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			break;
+		default:
+			mutation = new ReplacementMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			break;
+		}
+		
+		return mutation;
+	}
+	
 	/* TODO: Should we move this to another class or is it ok here? */
-	public void testCurrentMutation(){
+	private void testCurrentMutation(){
 		/* TODO: Compile and execute the program. */
 	}
 	

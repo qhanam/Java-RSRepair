@@ -87,6 +87,34 @@ public class JRSRepair {
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
 	}
 	
+
+	/**
+	 * The main method for trying a mutation. It performs all the operations needed 
+	 * to mutate, compile and test the program. It is recursive and will therefore
+	 * attempts multiple mutations at a time before rolling back their changes. 
+	 * @param depth The number of mutations that have already been applied.
+	 */
+	public void mutationIteration(int depth){
+		for(int i = 0; i < 10; i++){ // TODO: Set the number of iterations as a parameter.
+			// Select a random mutation
+			
+			// Apply the mutation
+			
+			// Store the mutation memento
+			
+			// Compile the program and execute the test cases
+			
+			// Store the results
+			
+			if(depth < 3){ // TODO: Set the maximum depth as a parameter
+				this.mutationIteration(depth + 1);
+			}
+			
+			// Roll back the current mutation
+		}
+	}
+	
+	/* TODO: Should we move this to another class or is it ok here? */
 	public void mutate() throws Exception{
 		for(int j = 0; j < 1; j++){
 			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
@@ -97,6 +125,7 @@ public class JRSRepair {
 		}
 	}
 	
+	/* TODO: Should we move this to another class or is it ok here? */
 	public void testCurrentMutation(){
 		/* TODO: Compile and execute the program. */
 	}

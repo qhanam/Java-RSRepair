@@ -12,5 +12,6 @@ public class SampleUse {
 	public static void main(String[] args) throws Exception {
 		JRSRepair repair = new JRSRepair(new File(SOURCE_DIRECTORY), new File(FAULTY_COVERAGE), new File(SEED_COVERAGE));
 		repair.buildASTs();
+		repair.mutate();
 	}
 }

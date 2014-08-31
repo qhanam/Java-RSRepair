@@ -1,27 +1,17 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
-import java.util.List;
 import java.util.LinkedList;
 import java.util.Collection;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.nio.CharBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
@@ -29,52 +19,48 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
 	
-	File sourcePath;
-	File faultyCoverageFile;
-	File seedCoverageFile;
+	private File sourcePath;
+	private File faultyCoverageFile;
+	private File seedCoverageFile;
+
+	private String[] sourceFilesArray;
+    private HashMap<String, DocumentASTRewrite> sourceFileContents;
+    
+    private Statements faultyStatements;
+    private Statements seedStatements;
+
+	private LineCoverage faultyLineCoverage;
+	private LineCoverage seedLineCoverage;
+
 	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile){
+	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile) throws Exception{
+		this.faultyStatements = new Statements();
+		this.seedStatements = new Statements();
+
 		this.sourcePath = sourcePath;
 		this.faultyCoverageFile = faultyCoverageFile;
 		this.seedCoverageFile = seedCoverageFile;
+
+		/* Get the list of source files for us to mutate. */
+		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);
+		
+		/* Load the source code from the .java files. */
+		this.sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
+		
+		/* Load the line coverage. */
+		this.faultyLineCoverage = new LineCoverage(this.faultyCoverageFile);
+		this.seedLineCoverage = new LineCoverage(this.seedCoverageFile);
 	}
 	
 	/**
 	 * Builds ASTs for all the source files.
 	 */
 	public void buildASTs() throws Exception{
-		Collection<File> sourceFiles;
-		String[] sourceFilesArray;
-		
-		/* If the buggy file is a directory, get all the java files in that directory. */
-		if(this.sourcePath.isDirectory()){
-			sourceFiles = FileUtils.listFiles(this.sourcePath, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
-			for (File javaFile : sourceFiles){
-				System.out.println(javaFile);
-			}
-		}
-		/* The buggy file may also be a source code file. */
-		else{
-			sourceFiles = new LinkedList<File>();
-			sourceFiles.add(this.sourcePath);
-		}
-		
-		/* Create the String array. */
-		sourceFilesArray = new String[sourceFiles.size()];
-		int i = 0;
-		for(File sourceFile : sourceFiles){
-			sourceFilesArray[i] = sourceFile.getCanonicalPath();
-			i++;
-		}
-		
-		/* Create the map of file paths to file contents (Document) */
-		HashMap<String, DocumentASTRewrite> sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
-		
 		/* Create the ASTParser with the source files to generate ASTs for, and set up the
 		 * environment using ASTParser.setEnvironment.
 		 */
@@ -90,10 +76,6 @@ public class JRSRepair {
 		
 		/* Set up the AST handler. We need to create LineCoverage and Statements classes to store 
 		 * and filter the statements from the ASTs. */
-		LineCoverage faultyLineCoverage = new LineCoverage(this.faultyCoverageFile);
-		LineCoverage seedLineCoverage = new LineCoverage(this.seedCoverageFile);
-		Statements faultyStatements = new Statements();
-		Statements seedStatements = new Statements();
 		FileASTRequestor fileASTRequestor = new MutationASTRequestor(sourceFileContents, faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
 		
 		/* createASTs(
@@ -103,8 +85,9 @@ public class JRSRepair {
 		 * FileASTRequestor requestor, 
 		 * IProgressMonitor monitor) */
 		parser.createASTs(sourceFilesArray, null, new String[] {}, fileASTRequestor, null);
-		
-		/* TODO: Mutate the program. */
+	}
+	
+	public void mutate() throws Exception{
 		for(int j = 0; j < 1; j++){
 			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
 			mutation.mutate();
@@ -112,9 +95,45 @@ public class JRSRepair {
 			mutation.mutate();
 			mutation.undo();
 		}
-		
+	}
+	
+	public void testCurrentMutation(){
 		/* TODO: Compile and execute the program. */
+	}
+	
+	/**
+	 * Generates a list of java source files given a directory, or returns the
+	 * file specified in an array.
+	 * @param sourcePath The path to the file/directory.
+	 * @return An array of paths to Java source files.
+	 * @throws Exception
+	 */
+	private static String[] getSourceFiles(File sourcePath) throws Exception{
+		Collection<File> sourceFiles;
+		String[] sourceFilesArray;
+
+		/* If the buggy file is a directory, get all the java files in that directory. */
+		if(sourcePath.isDirectory()){
+			sourceFiles = FileUtils.listFiles(sourcePath, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
+			for (File javaFile : sourceFiles){
+				System.out.println(javaFile);
+			}
+		}
+		/* The buggy file may also be a source code file. */
+		else{
+			sourceFiles = new LinkedList<File>();
+			sourceFiles.add(sourcePath);
+		}
 		
+		/* Create the String array. */
+		sourceFilesArray = new String[sourceFiles.size()];
+		int i = 0;
+		for(File sourceFile : sourceFiles){
+			sourceFilesArray[i] = sourceFile.getCanonicalPath();
+			i++;
+		}
+		
+		return sourceFilesArray;
 	}
 	
 	/**

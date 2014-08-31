@@ -30,14 +30,9 @@ public class DeletionMutation extends Mutation {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void mutate() throws Exception {
-		/* TODO: Find the nearest ancestor that is a Block statement. */
 		ASTNode parent = faulty.statement.getParent();
-		
-		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
-		 * is a Block statement */
-		AST ast = faulty.statement.getRoot().getAST();
 
-		System.out.println("-------");
+		System.out.println("------- Deletion Mutation");
 		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
 		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
 		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));

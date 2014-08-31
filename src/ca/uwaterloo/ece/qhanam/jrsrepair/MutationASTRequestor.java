@@ -1,16 +1,9 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.util.HashMap;
-import java.util.List;
 
-import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IClassFile;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.compiler.IProblem;
 
 
 /**
@@ -89,7 +82,6 @@ public class MutationASTRequestor extends FileASTRequestor {
 			
 			/* Check if this statement has been covered. If so add it to the appropriate statement 
 			 * list with its weight. */
-			System.out.println(node);
 			Double weight;
 			if((weight = MutationASTRequestor.this.faultyLineCoverage.contains(node)) != null){
                 MutationASTRequestor.this.faultyStatements.addStatement(new SourceStatement(this.sourceFilePath, s), weight);
@@ -134,6 +126,7 @@ public class MutationASTRequestor extends FileASTRequestor {
      *   	  variables separately (i.e., omit local variables from methods we 
      *   	  are not mutating).
      */
+	@SuppressWarnings("unused")
 	private class VarASTVisitor extends ASTVisitor{
 		public boolean visit(VariableDeclarationFragment var) {
 			System.out.println("variable: " + var.getName());

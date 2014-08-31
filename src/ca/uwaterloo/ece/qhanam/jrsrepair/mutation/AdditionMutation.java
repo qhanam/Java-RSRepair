@@ -4,7 +4,6 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 
 import java.util.HashMap;
-import java.util.List;
 
 import org.eclipse.jdt.core.dom.rewrite.*;
 import org.eclipse.jdt.core.dom.*;
@@ -23,17 +22,15 @@ public class AdditionMutation extends Mutation {
 	 * Adds the seed statement to the AST right before the 
 	 * faulty statement. 
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public void mutate() throws Exception {
-		/* TODO: Find the nearest ancestor that is a Block statement. */
 		ASTNode parent = faulty.statement.getParent();
 		
 		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
 		 * is a Block statement */
 		AST ast = faulty.statement.getRoot().getAST();
 
-		System.out.println("-------");
+		System.out.println("------- Addition Mutation");
 		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
 		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
 		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
@@ -41,12 +38,9 @@ public class AdditionMutation extends Mutation {
 		if(parent instanceof Block){
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
-            List<ASTNode> nodes = (List<ASTNode>) lrw.getOriginalList();
+
             System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
             System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
-            for(ASTNode node : nodes){
-            	System.out.println("ListRewrite Node: " + node);
-            }
             
             /* Make a copy of the seed statement and base it in the faulty statement's AST. */
             ASTNode s = ASTNode.copySubtree(ast, seed.statement);

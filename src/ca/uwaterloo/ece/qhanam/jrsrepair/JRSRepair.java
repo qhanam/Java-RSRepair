@@ -172,9 +172,6 @@ public class JRSRepair {
 		/* If the buggy file is a directory, get all the java files in that directory. */
 		if(sourcePath.isDirectory()){
 			sourceFiles = FileUtils.listFiles(sourcePath, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
-			for (File javaFile : sourceFiles){
-				System.out.println(javaFile);
-			}
 		}
 		/* The buggy file may also be a source code file. */
 		else{

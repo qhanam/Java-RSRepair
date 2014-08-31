@@ -4,7 +4,6 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
 
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jface.text.IDocument;
 
 import java.util.HashMap;

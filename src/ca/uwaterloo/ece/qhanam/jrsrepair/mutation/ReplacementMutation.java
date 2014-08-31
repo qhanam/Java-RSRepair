@@ -4,9 +4,7 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 
 import java.util.HashMap;
-import java.util.List;
 
-import org.eclipse.jdt.core.dom.rewrite.*;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.text.edits.*;
 
@@ -22,17 +20,15 @@ public class ReplacementMutation extends Mutation {
 	/**
 	 * Replaces the faulty statement with the seed statement.
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public void mutate() throws Exception {
-		/* TODO: Find the nearest ancestor that is a Block statement. */
 		ASTNode parent = faulty.statement.getParent();
 		
 		/* Start by assuming all parents are block statements. Later we can search for an ancestor that
 		 * is a Block statement */
 		AST ast = faulty.statement.getRoot().getAST();
 
-		System.out.println("-------");
+		System.out.println("------- Replacement Mutation");
 		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
 		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
 		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));

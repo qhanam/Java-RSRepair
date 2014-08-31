@@ -1,7 +1,5 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
-import org.eclipse.jdt.core.dom.*;
-
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.Set;

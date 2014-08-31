@@ -117,7 +117,9 @@ public class JRSRepair {
 	/* TODO: Should we move this to another class or is it ok here? */
 	public void mutate() throws Exception{
 		for(int j = 0; j < 1; j++){
-			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+//			Mutation mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+//			Mutation mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			Mutation mutation = new ReplacementMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
 			mutation.mutate();
 			mutation.undo();
 			mutation.mutate();

@@ -10,13 +10,17 @@ import org.eclipse.jdt.core.dom.rewrite.*;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.text.edits.*;
 
-public class AdditionMutation extends Mutation {
+public class DeletionMutation extends Mutation {
 	
-	private ASTNode addedStatement; // The (copied) seed statement that was added before the faulty statement.
+	private ASTNode deletedStatement; // The faulty statement that was removed. We also need to keep track of its position.
+	private Integer deletedStatementIndex;
+	private ListRewrite listRewriter;
 	private UndoEdit undoEdit;		// Memento to undo the text edit performed on the this.document.
 	
-	public AdditionMutation(HashMap<String, DocumentASTRewrite> sourceFileContents, SourceStatement faulty, SourceStatement seed){
+	public DeletionMutation(HashMap<String, DocumentASTRewrite> sourceFileContents, SourceStatement faulty, SourceStatement seed){
 		super(sourceFileContents, faulty, seed);
+		this.deletedStatementIndex = null;
+		this.listRewriter = null;
 	}
 
 	/**
@@ -40,22 +44,26 @@ public class AdditionMutation extends Mutation {
 		
 		if(parent instanceof Block){
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
-            ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
-            List<ASTNode> nodes = (List<ASTNode>) lrw.getOriginalList();
+            this.listRewriter = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
+
             System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
             System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
-            for(ASTNode node : nodes){
-            	System.out.println("ListRewrite Node: " + node);
-            }
             
-            /* Make a copy of the seed statement and base it in the faulty statement's AST. */
-            ASTNode s = ASTNode.copySubtree(ast, seed.statement);
+            /* Find the index of the statement we want to delete. */
+            List<ASTNode> nodes = (List<ASTNode>) this.listRewriter.getOriginalList();
+            for(int i = 0; i < nodes.size(); i++){
+            	if(nodes.get(i).equals(faulty.statement)) {
+            		this.deletedStatementIndex = i; 
+            		break;
+            	}
+            }
+            if(this.deletedStatementIndex == null) throw new Exception("DeletionMutation: Deleted statement index not found.");
             
             /* Store the added statement so we can undo the operation. */
-            this.addedStatement = s;
+            this.deletedStatement = faulty.statement;
             
             /* Insert the statement into the AST before the faulty statement. */
-            lrw.insertBefore(s, faulty.statement, new TextEditGroup("TextEditGroup"));
+            this.listRewriter.remove(faulty.statement, null);
 
             /* Modify the source code file. */
             TextEdit edits = rewrite.rewriteAST(this.document, null);
@@ -70,10 +78,10 @@ public class AdditionMutation extends Mutation {
 	 */
 	@Override
 	public void undo() throws Exception{
-		if(this.addedStatement == null || this.undoEdit == null) return; // Nothing to do.
+		if(this.deletedStatement == null || this.undoEdit == null || this.listRewriter == null) return; // Nothing to do.
         
         /* Undo the edit to the AST. */
-        this.rewrite.remove(this.addedStatement, null);
+		this.listRewriter.insertAt(this.deletedStatement, this.deletedStatementIndex, null);
         this.undoEdit.apply(this.document);
         
         System.out.print(this.document.get());

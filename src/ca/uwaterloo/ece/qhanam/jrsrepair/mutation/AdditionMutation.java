@@ -56,18 +56,23 @@ public class AdditionMutation extends Mutation {
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
             List<ASTNode> nodes = (List<ASTNode>) lrw.getOriginalList();
-            System.out.println("Faulty: " + faulty.statement);
+            System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
+            System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
             for(ASTNode node : nodes){
             	System.out.println("ListRewrite Node: " + node);
             }
             // Can we do this: rewrite.createCopyTarget(seed)? It may be in a different AST...
-            ASTNode s = rewrite.createCopyTarget(seed.statement);
-            lrw.insertBefore(rewrite.createCopyTarget(faulty.statement), faulty.statement, new TextEditGroup("TextEditGroup"));
+//            ASTNode s = rewrite.createCopyTarget(faulty.statement);
+//            ASTNode s = rewrite.createCopyTarget(seed.statement);
+            ASTNode s = ASTNode.copySubtree(ast, seed.statement);
+            lrw.insertBefore(s, faulty.statement, new TextEditGroup("TextEditGroup"));
             
             TextEdit edits = rewrite.rewriteAST(document, null);
-            UndoEdit undo = edits.apply(document);
-
+            UndoEdit undo = edits.apply(document, TextEdit.CREATE_UNDO);
             System.out.print(document.get());
+            undo = undo.apply(document);
+            System.out.print(document.get());
+
 		}
 		
 		
@@ -77,6 +82,18 @@ public class AdditionMutation extends Mutation {
 		
 		
 		//parent.setStructuralProperty(new ChildPropertyDescriptor(), new Object());
+	}
+	
+	/**
+	 * Undoes the mutation that was applied in mutate().
+	 * 
+	 * This will undo both the change to the text file (Document) as
+	 * well as the change to the AST. 
+	 * 
+	 * Best used with memento pattern.
+	 */
+	public void undo(){
+		
 	}
 
 }

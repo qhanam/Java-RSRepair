@@ -67,6 +67,11 @@ public class ReplacementMutation extends Mutation {
         /* Undo the edit to the AST. */
 		//CompilationUnit cu = ((CompilationUnit) this.replacementNode.getRoot());
 		this.rewrite.replace(this.replacementNode, this.faulty.statement, null);
+
+		/* We need to write the undo changes back to the source file because of recursion. */
+        this.docrwt.resetModifiedDocument(); // Start with the original document to avoid the AST-doesn't-match-doc error.
+        TextEdit edits = rewrite.rewriteAST(this.docrwt.modifiedDocument, null);
+        this.undoEdit = edits.apply(this.docrwt.modifiedDocument, TextEdit.CREATE_UNDO);
         //this.undoEdit.apply(this.docrwt.modifiedDocument);
         this.undoEdit = null;
 	}

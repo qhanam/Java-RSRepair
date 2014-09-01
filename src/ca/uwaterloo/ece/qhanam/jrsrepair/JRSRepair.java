@@ -35,6 +35,7 @@ public class JRSRepair {
 
 	private int mutationIterations;
 	private int mutationDepth;
+	private int mutationAttempts;
 	
 	private TestExecutor testExecutor;
 	
@@ -43,7 +44,7 @@ public class JRSRepair {
 	 * of the program we are mutating.
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth, TestExecutor testExecutor) throws Exception{
+	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth, int mutationAttempts, TestExecutor testExecutor) throws Exception{
 		this.faultyStatements = new Statements();
 		this.seedStatements = new Statements();
 
@@ -53,6 +54,7 @@ public class JRSRepair {
 		
 		this.mutationIterations = mutationIterations;
 		this.mutationDepth = mutationDepth;
+		this.mutationAttempts = mutationAttempts;
 		
 		this.testExecutor = testExecutor;
 
@@ -115,26 +117,43 @@ public class JRSRepair {
 	 */
 	private void mutationIteration(int depth) throws Exception{
 		for(int i = 0; i < this.mutationIterations; i++){ 
+			/* If we can't find a solution within some number of iterations, abort. */
+			int attemptCounter = 0;
+			
 			/* Let the user know our progress. */
 			System.out.println("Running iteration " + i + " at depth " + depth + " ...");
 			
-			/* Get a random mutation operation to apply. */
-			Mutation mutation = this.getRandomMutation();
+            Mutation mutation = null;
+			boolean compiled = false;
 			
-			/* Apply the mutation to the AST + Document. */
-			mutation.mutate();
-			this.writeChangesToDisk();
+			/* We need to ensure the first levels compile or else the rest of the
+			 * mutations won't be useful. */
+			do {
+
+                /* Get a random mutation operation to apply. */
+                mutation = this.getRandomMutation();
+                
+                /* Apply the mutation to the AST + Document. */
+                mutation.mutate();
+                this.writeChangesToDisk();
+                
+                /* Compile the program and execute the test cases. */
+                compiled = this.testExecutor.runTests();
+                
+            	if(!compiled) mutation.undo(); 
+            	attemptCounter++;
+
+			} while(!compiled && attemptCounter < this.mutationAttempts);
 			
-			/* Compile the program and execute the test cases. */
-			this.testExecutor.runTests();
-			
-			/* Recurse to the next level of mutations. */
-			if(depth < this.mutationDepth){ 
-				this.mutationIteration(depth + 1);
+			if(compiled){
+                /* Recurse to the next level of mutations. */
+                if(depth < this.mutationDepth){ 
+                    this.mutationIteration(depth + 1);
+                }
+                
+                /* Roll back the current mutation. */
+                mutation.undo();
 			}
-			
-			/* Roll back the current mutation. */
-			mutation.undo();
 		}
 	}
 	
@@ -173,7 +192,7 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentTainted()){
 				/* Since the document is tainted, we need to write it to disk. */
-				Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 			}
 		}
 	}

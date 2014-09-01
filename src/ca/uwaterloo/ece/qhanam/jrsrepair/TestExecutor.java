@@ -26,10 +26,11 @@ public class TestExecutor {
 	
 	/**
 	 * Run the script (e.g., ant) to compile the program and run the JUnit test cases.
+	 * @return true if the program under repair compiled, false otherwise.
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unused")
-	public void runTests() throws Exception{
+	public boolean runTests() throws Exception{
 		ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTarget);
 		builder.directory(this.baseDirectory);
 		Process process = builder.start();
@@ -40,13 +41,13 @@ public class TestExecutor {
         BufferedReader stdError = new BufferedReader(new 
              InputStreamReader(process.getErrorStream()));
 	    
-	      // read the output from the command
-//	        System.out.println("Checkout script output:");
-//	        String s = null;
-//	        while ((s = stdInput.readLine()) != null) {
-//	            System.out.println(s);
-//	        }
-
+	    /* Read the output from the command. */
+        String output = "";
+        String s = null;
+        while ((s = stdInput.readLine()) != null) {
+        	output += s;
+        }
+        
 	        // read any errors from the attempted command
 //	        System.out.println("Checkout script error output:");
 //	        while ((s = stdError.readLine()) != null) {
@@ -55,6 +56,11 @@ public class TestExecutor {
 	    
 	    try{
 	      process.waitFor();
+	      
+	      /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
+	      if(output.indexOf("BUILD SUCCESSFUL") < 0) return false;
+	      return true;
+
 	    }catch(InterruptedException e){ 
 	      System.out.println("Interrupted Exception during cvsCheckout.");
 	      throw e;

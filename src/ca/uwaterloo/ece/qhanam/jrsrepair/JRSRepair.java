@@ -1,16 +1,17 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.util.Set;
 import java.util.LinkedList;
 import java.util.Collection;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -35,12 +36,14 @@ public class JRSRepair {
 	private int mutationIterations;
 	private int mutationDepth;
 	
+	private TestExecutor testExecutor;
+	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth) throws Exception{
+	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth, TestExecutor testExecutor) throws Exception{
 		this.faultyStatements = new Statements();
 		this.seedStatements = new Statements();
 
@@ -50,6 +53,8 @@ public class JRSRepair {
 		
 		this.mutationIterations = mutationIterations;
 		this.mutationDepth = mutationDepth;
+		
+		this.testExecutor = testExecutor;
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);
@@ -99,6 +104,7 @@ public class JRSRepair {
 	public void repair() throws Exception{
 		if(this.sourceFileContents.isEmpty() || this.faultyStatements.isEmpty() || this.seedStatements.isEmpty()) throw new Exception("The ASTs have not been built.");
 		this.mutationIteration(0);
+		this.writeChangesToDisk(); // Leave the program in its original state (hopefully)
 	}
 
 	/**
@@ -114,11 +120,10 @@ public class JRSRepair {
 			
 			/* Apply the mutation to the AST + Document. */
 			mutation.mutate();
+			this.writeChangesToDisk();
 			
 			/* Compile the program and execute the test cases. */
-			this.testCurrentMutation();
-			
-			// Store the results
+			this.testExecutor.runTests();
 			
 			/* Recurse to the next level of mutations. */
 			if(depth < this.mutationDepth){ 
@@ -153,11 +158,20 @@ public class JRSRepair {
 		return mutation;
 	}
 	
-	/* TODO: Should we move this to another class or is it ok here? */
-	private void testCurrentMutation(){
-		/* TODO: Write the source file changes back to disk. Maybe use taint tracking for this? */
-		
-		/* TODO: Compile and execute the program. */
+	/**
+	 * Writes the source file changes back to disk. Only writes the documents that are marked
+	 * as tainted.
+	 * @throws Exception
+	 */
+	private void writeChangesToDisk() throws Exception{
+		Set<String> sourcePaths = this.sourceFileContents.keySet();
+		for(String sourcePath : sourcePaths){
+			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
+			if(drwt.isDocumentTainted()){
+				/* Since the document is tainted, we need to write it to disk. */
+				Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+			}
+		}
 	}
 	
 	/**

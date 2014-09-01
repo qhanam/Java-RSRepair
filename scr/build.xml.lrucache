@@ -1,0 +1,137 @@
+<project name="MyProject" default="compile" basedir=".">
+	<description>
+		Executatable build file for LRUCache test program.
+	</description>
+
+	<!-- set global properties for this build -->
+	<property name="source.java" location="src"/>
+	<property name="source.test" location="test"/>
+	<property name="build" location="build"/>
+	<property name="dist"  location="dist"/>
+
+<!-- ========== Properties ================================================ -->
+
+  <!-- This can be used to define 'junit.jar' property if necessary -->
+  <property file="build.properties"/>
+
+<!-- ========== Component Declarations ==================================== -->
+
+  <!-- The name of this component -->
+  <property name="component.name"          value="lru-cache"/>
+
+  <!-- The primary package name of this component -->
+  <property name="component.package"       value="ca.uwaterloo.ece.qhanam.practice.lrucache"/>
+
+  <!-- The short title of this component -->
+  <property name="component.title"         value="LRU Cache"/>
+
+  <!-- The full title of this component -->
+  <property name="component.title.full"    value="LRU Cache Test Program"/>
+
+  <!-- The current version number of this component -->
+  <property name="component.version"       value="1.0"/>
+
+  <!-- The base directory for component sources -->
+  <property name="source.java"             value="java/"/>
+
+  <!-- The base directory for unit test sources -->
+  <property name="source.test"             value="test/"/>
+
+  <!-- The directories for compilation targets -->
+  <property name="build.home"              value="build/"/>
+  <property name="build.classes"           value="${build.home}/classes"/>
+  <property name="build.tests"             value="${build.home}/tests"/>
+  <property name="build.test.reports"      value="${build.home}/test-reports"/>
+	<property name="junit.jar"							 value="/usr/share/junit/junit.jar"/>
+  
+  <!-- The name/location of the jar file to build -->
+  <property name="final.name"           value="${component.name}-${component.version}"/>
+  <property name="jar.name"             value="${final.name}.jar"/>
+  <property name="build.jar.name"       value="${build.home}/${jar.name}"/>
+  
+<!-- ========== Settings ================================================== -->
+
+  <!-- Javac -->
+  <property name="compile.debug"           value="true"/>
+  <property name="compile.deprecation"     value="true"/>
+  <property name="compile.optimize"        value="false"/>
+
+  <!-- JUnit -->
+  <property name="test.failonerror"        value="true"/>
+	<property name="testcase"								 value="ca.uwaterloo.ece.qhanam.localization.TestLRU"/>
+
+<!-- ======================================================== -->
+<!-- ======= Executable Targets ============================= -->
+<!-- ======================================================== -->
+
+	<target name="init"
+					description="Initialize and evaluate conditionals">
+		<echo message="------- ${component.name} ${component.version} ------"/>
+	</target>
+
+<!-- ======================================================== -->
+
+	<target name="prepare" depends="init"
+					description="Prepare build directory">
+		<mkdir dir="${build.home}"/>
+	</target>
+
+<!-- ======================================================== -->
+
+	<target name="compile" depends="init"
+					description="Compile main code">
+		<mkdir dir="${build.classes}" />
+		<javac srcdir="${source.java}"
+						destdir="${build.classes}"
+						debug="${compile.debug}"
+						deprecation="${compile.deprecation}"
+						optimize="${compile.optimize}">
+		</javac>
+	</target>
+
+<!-- ======================================================== -->
+
+	<target name="compile.tests" depends="compile"
+					description="Compile unit test cases">
+		<mkdir dir="${build.tests}" />
+		<javac srcdir="${source.test}"
+						destdir="${build.tests}"
+						debug="true"
+						deprecation="false"
+						optimize="false">
+			<classpath>
+				<pathelement location="${build.classes}"/>
+				<pathelement location="${junit.jar}"/>
+			</classpath>
+		</javac>
+	</target>
+
+<!-- ======================================================== -->
+
+	<target name="jar" depends="compile"
+			description="Create jar" >
+		<tstamp/>
+		<jar 	jarfile="${build.jar.name}"
+					basedir="${build.classes}"/>
+	</target>
+
+<!-- ======================================================== -->
+
+	<target name="junit" depends="compile.tests"
+					description="Run JUnit test cases.">
+		<mkdir dir="${build.test.reports}"/>
+		<tstamp/>
+		<junit printsummary="yes" haltonfailure="no" showoutput="yes">
+			<formatter type="brief"/>
+			<classpath>
+				<pathelement location="${build.classes}"/>
+				<pathelement location="${build.tests}"/>
+				<pathelement location="${junit.jar}"/>
+			</classpath>
+			<test name="${testcase}" fork="yes" todir="${build.test.reports}" outfile="TEST-${DSTAMP}${TSTAMP}">
+				<formatter type="brief" usefile="false"/>
+			</test>
+		</junit>
+	</target>
+
+</project>

@@ -105,8 +105,13 @@ public class JRSRepair {
 	 */
 	public void repair() throws Exception{
 		if(this.sourceFileContents.isEmpty() || this.faultyStatements.isEmpty() || this.seedStatements.isEmpty()) throw new Exception("The ASTs have not been built.");
-		this.mutationIteration(0);
-		this.writeChangesToDisk(); // Leave the program in its original state (hopefully)
+		
+		try{
+			this.mutationIteration(0);
+		}
+		finally {
+            this.writeChangesToDisk(); // Leave the program in its original state (hopefully)
+		}
 	}
 
 	/**
@@ -137,22 +142,33 @@ public class JRSRepair {
                 mutation.mutate();
                 this.writeChangesToDisk();
                 
-                /* Compile the program and execute the test cases. */
-                compiled = this.testExecutor.runTests();
-                
-            	if(!compiled) mutation.undo(); 
+                try{
+                    /* Compile the program and execute the test cases. */
+                    compiled = this.testExecutor.runTests();
+                } catch (Exception e){
+                	System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
+                }
+                finally { 
+                    /* Roll back the current mutation. */
+                    if(!compiled) mutation.undo(); 
+                }
+
             	attemptCounter++;
 
 			} while(!compiled && attemptCounter < this.mutationAttempts);
 			
 			if(compiled){
-                /* Recurse to the next level of mutations. */
-                if(depth < this.mutationDepth){ 
-                    this.mutationIteration(depth + 1);
-                }
-                
-                /* Roll back the current mutation. */
-                mutation.undo();
+				try{
+                    /* Recurse to the next level of mutations. */
+                    if(depth < this.mutationDepth){ 
+                        this.mutationIteration(depth + 1);
+                    }
+				} catch (Exception e) {
+					System.err.println("JRSRepair: Exception thrown during mutation recursion.");
+				} finally { 
+                    /* Roll back the current mutation. */
+                    mutation.undo();
+				}
 			}
 		}
 	}

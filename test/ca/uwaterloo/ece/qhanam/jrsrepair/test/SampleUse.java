@@ -11,7 +11,7 @@ public class SampleUse {
 	
 	public static final int MUTATION_ITERATIONS = 3;
 	public static final int MUTATION_DEPTH = 2;
-	public static final int MUTATION_ATTEMPTS = 10;
+	public static final int MUTATION_ATTEMPTS = 5;
 	
 	public static final String ANT_BASE_DIR = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/";
 	public static final String ANT_PATH = "/usr/bin/ant";

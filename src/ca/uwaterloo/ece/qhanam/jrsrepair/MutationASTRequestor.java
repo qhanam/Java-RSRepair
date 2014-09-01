@@ -44,6 +44,11 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 */
 	@Override
 	public void acceptAST(String sourceFilePath, CompilationUnit cu) { 
+		/* TODO: Turn on modification logging for the CompilationUnit. We
+		 * 		 can use this instead of manually keeping track of 
+		 * 		 ASTRewrite objects for each CompilationUnit. */
+		// cu.recordModifications();
+		
 		/* Create an ASTRewriter to track the this file's mutations. */
 		AST ast = cu.getAST();
 		this.sourceFileContents.get(sourceFilePath).rewriter = ASTRewrite.create(ast);

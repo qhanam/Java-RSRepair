@@ -54,6 +54,10 @@ public abstract class Mutation {
 	public void undo() throws Exception {
 		this.docrwt.taintDocument();
 		this.concreteUndo();
+		
+		/* Relinquish use of the statements. */
+		this.faulty.inUse = false;
+		this.seed.inUse = false;
 	}
 
 	protected abstract void concreteUndo() throws Exception;

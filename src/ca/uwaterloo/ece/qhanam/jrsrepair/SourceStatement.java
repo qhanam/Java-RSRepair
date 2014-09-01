@@ -16,9 +16,11 @@ import org.eclipse.jdt.core.dom.Statement;
 public class SourceStatement {
 	public String sourceFile;
 	public Statement statement;
+	public boolean inUse;
 	
 	public SourceStatement(String sourceFile, Statement statement){
 		this.sourceFile = sourceFile;
 		this.statement = statement;
+		this.inUse = false;
 	}
 }

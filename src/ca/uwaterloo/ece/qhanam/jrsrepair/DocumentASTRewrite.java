@@ -1,6 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 /**
@@ -11,6 +12,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
  */
 public class DocumentASTRewrite {
 	public IDocument document;
+	public IDocument modifiedDocument;
 	public ASTRewrite rewriter;
 	private boolean tainted;
 
@@ -18,6 +20,8 @@ public class DocumentASTRewrite {
 		this.document = document;
 		this.rewriter = rewriter;
 		this.tainted = false;
+		
+		this.resetModifiedDocument();
 	}
 	
 	public void taintDocument(){
@@ -30,5 +34,9 @@ public class DocumentASTRewrite {
 	
 	public boolean isDocumentTainted(){
 		return this.tainted;
+	}
+	
+	public void resetModifiedDocument(){
+		this.modifiedDocument = new Document(document.get());
 	}
 }

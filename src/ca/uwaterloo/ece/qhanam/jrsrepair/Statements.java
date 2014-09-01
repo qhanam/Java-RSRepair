@@ -43,11 +43,22 @@ public class Statements {
 	 * @return The faulty statement to be mutated.
 	 */
 	public SourceStatement getRandomStatement(){
-		/* Compute a random spot. */
-		double random = Math.random() * this.totalWeight;
-		
-		/* Find the statement at that random spot. */
-		return this.statements.ceilingEntry(random).getValue();
+		SourceStatement statement = null;
+
+		do{
+
+            /* Compute a random spot. */
+            double random = Math.random() * this.totalWeight;
+            
+            /* Find the statement at that random spot. */
+            statement = this.statements.ceilingEntry(random).getValue();
+
+		} while(statement.inUse);
+
+		/* This statement is now in use. */
+		statement.inUse = true;
+
+		return statement;
 	}
 	
 	/**

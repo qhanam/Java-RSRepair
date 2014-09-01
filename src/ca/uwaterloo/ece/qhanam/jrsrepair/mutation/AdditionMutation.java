@@ -29,18 +29,13 @@ public class AdditionMutation extends Mutation {
 		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
 		 * is a Block statement */
 		AST ast = faulty.statement.getRoot().getAST();
+//		AST ast = this.rewrite.getAST();
 
-		System.out.println("------- Addition Mutation");
-		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
-		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
-		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
+		System.out.println("Applying addition mutation...");
 		
 		if(parent instanceof Block){
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
-
-            System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
-            System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
             
             /* Make a copy of the seed statement and base it in the faulty statement's AST. */
             ASTNode s = ASTNode.copySubtree(ast, seed.statement);
@@ -54,8 +49,6 @@ public class AdditionMutation extends Mutation {
             /* Modify the source code file. */
             TextEdit edits = rewrite.rewriteAST(this.document, null);
             this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
-
-            System.out.print(this.document.get());
 		}
 	}
 	
@@ -70,8 +63,6 @@ public class AdditionMutation extends Mutation {
         this.rewrite.remove(this.addedStatement, null);
         this.undoEdit.apply(this.document);
         this.undoEdit = null;
-        
-        System.out.print(this.document.get());
 	}
 
 }

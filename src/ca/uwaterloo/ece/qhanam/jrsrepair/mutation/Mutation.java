@@ -11,7 +11,7 @@ import java.util.HashMap;
 public abstract class Mutation {
 	
 	protected HashMap<String, DocumentASTRewrite> sourceMap;
-    DocumentASTRewrite docrwt;
+    protected DocumentASTRewrite docrwt;
 	protected SourceStatement faulty;
 	protected SourceStatement seed;
 	protected IDocument document;

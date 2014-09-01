@@ -28,16 +28,10 @@ public class ReplacementMutation extends Mutation {
 		 * is a Block statement */
 		AST ast = faulty.statement.getRoot().getAST();
 
-		System.out.println("------- Replacement Mutation");
-		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
-		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
-		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
-		
+		System.out.println("Applying replacement mutation...");
+
 		if(parent instanceof Block){
 
-            System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
-            System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
-            
             /* Make a copy of the seed statement and base it in the faulty statement's AST. */
             this.replacementNode = ASTNode.copySubtree(ast, seed.statement);
             
@@ -45,10 +39,14 @@ public class ReplacementMutation extends Mutation {
             rewrite.replace(faulty.statement, this.replacementNode, null);
             
             /* Modify the source code file. */
-            TextEdit edits = rewrite.rewriteAST(this.document, null);
-            this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
+            try{
+                TextEdit edits = rewrite.rewriteAST(this.document, null);
+                this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
+            } catch(Exception e){
+            	System.out.print(this.document.get());
+            	throw e;
+            }
 
-            System.out.print(this.document.get());
 		}
 	}
 	
@@ -63,8 +61,6 @@ public class ReplacementMutation extends Mutation {
 		this.rewrite.replace(this.replacementNode, this.faulty.statement, null);
         this.undoEdit.apply(this.document);
         this.undoEdit = null;
-        
-        System.out.print(this.document.get());
 	}
 
 }

@@ -4,6 +4,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 
+/**
+ * TestExecutor compiles and runs the JUnit tests for the program under repair.
+ * 
+ * TODO: Since different programs have different builds, this class should be
+ * 		 an interface or abstract (e.g., AntTestExecutor).
+ * 
+ * @author qhanam
+ */
 public class TestExecutor {
 	
 	private File baseDirectory;
@@ -16,10 +24,14 @@ public class TestExecutor {
 		this.antTarget = antTarget;
 	}
 	
+	/**
+	 * Run the script (e.g., ant) to compile the program and run the JUnit test cases.
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unused")
 	public void runTests() throws Exception{
-	    /* Let's make a script file that gets executed and have the revision be a parameter. */
 		ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTarget);
-		builder.directory(new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/"));
+		builder.directory(this.baseDirectory);
 		Process process = builder.start();
 	    
 	    BufferedReader stdInput = new BufferedReader(new 

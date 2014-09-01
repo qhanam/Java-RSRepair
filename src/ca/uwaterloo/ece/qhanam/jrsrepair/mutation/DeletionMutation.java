@@ -32,17 +32,11 @@ public class DeletionMutation extends Mutation {
 	public void concreteMutate() throws Exception {
 		ASTNode parent = faulty.statement.getParent();
 
-		System.out.println("------- Deletion Mutation");
-		System.out.println(ASTNode.nodeClassForType(parent.getNodeType()) + ": " + faulty.statement.getLocationInParent());
-		System.out.println(ASTNode.nodeClassForType(faulty.statement.getNodeType()));
-		System.out.println(ASTNode.nodeClassForType(seed.statement.getNodeType()));
+		System.out.println("Applying deletion mutation...");
 		
 		if(parent instanceof Block){
 			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
             this.listRewriter = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
-
-            System.out.println("Faulty: " + faulty.statement + " (" + faulty.sourceFile + ")");
-            System.out.println("Seed: " + seed.statement + " (" + seed.sourceFile + ")");
             
             /* Find the index of the statement we want to delete. */
             List<ASTNode> nodes = (List<ASTNode>) this.listRewriter.getOriginalList();
@@ -63,8 +57,6 @@ public class DeletionMutation extends Mutation {
             /* Modify the source code file. */
             TextEdit edits = rewrite.rewriteAST(this.document, null);
             this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
-
-            System.out.print(this.document.get());
 		}
 	}
 	
@@ -79,8 +71,6 @@ public class DeletionMutation extends Mutation {
 		this.listRewriter.insertAt(this.deletedStatement, this.deletedStatementIndex, null);
         this.undoEdit.apply(this.document);
         this.undoEdit = null;
-        
-        System.out.print(this.document.get());
 	}
 
 }

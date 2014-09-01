@@ -115,6 +115,9 @@ public class JRSRepair {
 	 */
 	private void mutationIteration(int depth) throws Exception{
 		for(int i = 0; i < this.mutationIterations; i++){ 
+			/* Let the user know our progress. */
+			System.out.println("Running iteration " + i + " at depth " + depth + " ...");
+			
 			/* Get a random mutation operation to apply. */
 			Mutation mutation = this.getRandomMutation();
 			
@@ -142,6 +145,7 @@ public class JRSRepair {
 	private Mutation getRandomMutation(){
 		Mutation mutation;
 		int index = (new Double(Math.ceil((Math.random() * 3)))).intValue();
+		index = 3;
 		
 		switch(index){
 		case 1:

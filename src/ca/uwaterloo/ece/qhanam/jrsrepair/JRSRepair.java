@@ -48,8 +48,10 @@ public class JRSRepair {
 	 * @param sourcePath The path to the source folder of the program we are mutating.
 	 */
 	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, int mutationIterations, int mutationDepth, int mutationAttempts, TestExecutor testExecutor) throws Exception{
-		this.faultyStatements = new Statements();
-		this.seedStatements = new Statements();
+		this.scope = new HashMap<String, HashSet<String>>();
+
+		this.faultyStatements = new Statements(this.scope);
+		this.seedStatements = new Statements(this.scope);
 
 		this.sourcePath = sourcePath;
 		this.faultyCoverageFile = faultyCoverageFile;
@@ -60,8 +62,6 @@ public class JRSRepair {
 		this.mutationAttempts = mutationAttempts;
 		
 		this.testExecutor = testExecutor;
-		
-		this.scope = new HashMap<String, HashSet<String>>();
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);

@@ -156,11 +156,13 @@ public class MutationASTRequestor extends FileASTRequestor {
 		 * Get the names of variables declared in the method.
 		 */
 		public boolean visit(MethodDeclaration md) {
-			System.out.println("Variables for method " + md.getName().toString() + ":");
             md.accept(new ASTVisitor() {
-                public boolean visit(VariableDeclarationFragment var) {
+                public boolean visit(VariableDeclarationFragment var) { // Field declarations, local variable declarations, ForStatement initializers
                 	MethodVarASTVisitor.this.variableNames.add(var.getName().toString());
-                    System.out.println("Local variable: " + var.getName());
+                    return false;
+                }
+                public boolean visit(SingleVariableDeclaration var) { // Formal parameters and catch statements
+                	MethodVarASTVisitor.this.variableNames.add(var.getName().toString());
                     return false;
                 }
             });
@@ -202,7 +204,6 @@ public class MutationASTRequestor extends FileASTRequestor {
 		 */
 		public boolean visit(VariableDeclarationFragment var) {
 			this.variableNames.add(var.getName().toString());
-			System.out.println("Member variable: " + var.getName());
 			return false;
 		}
 

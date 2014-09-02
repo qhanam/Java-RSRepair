@@ -7,11 +7,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.Set;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.*;
 
 /**
  * Stores a list of statements and their weights. Randomly selects statements (with probabilities

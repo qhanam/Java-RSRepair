@@ -16,6 +16,7 @@ public abstract class Mutation {
 	protected SourceStatement seed;
 	protected IDocument document;
 	protected ASTRewrite rewrite;
+	private boolean mutated;
 	
 	/**
 	 * Creates a new Mutation object.
@@ -30,6 +31,7 @@ public abstract class Mutation {
 		this.sourceMap = sourceMap;
 		this.faulty = faulty;
 		this.seed = seed;
+		this.mutated = false;
 	}
 	
 	/**
@@ -37,6 +39,7 @@ public abstract class Mutation {
 	 * @throws Exception 
 	 */
 	public void mutate() throws Exception {
+		if(mutated) throw new Exception("A mutate operation has allready been applied. Must call undo() before mutating again.");
 		this.docrwt.taintDocument();
 		this.concreteMutate();
 	}
@@ -52,6 +55,8 @@ public abstract class Mutation {
 	 * Best used with memento pattern.
 	 */
 	public void undo() throws Exception {
+		if(mutated) throw new Exception("The mutate operation has not been applied. Must call mutate() before undo().");
+
 		this.docrwt.taintDocument();
 		this.concreteUndo();
 		

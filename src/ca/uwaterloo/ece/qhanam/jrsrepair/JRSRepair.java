@@ -180,7 +180,7 @@ public class JRSRepair {
 	private Mutation getRandomMutation(){
 		Mutation mutation;
 		int index = (new Double(Math.ceil((Math.random() * 3)))).intValue();
-		index = 3;
+		index = 2;
 		
 		switch(index){
 		case 1:

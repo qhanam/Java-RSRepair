@@ -44,17 +44,39 @@ public class Statements {
         this.totalWeight += weight;
         this.statements.put(this.totalWeight, s);
 	}
-	
+
 	/**
 	 * Randomly selects and returns a faulty statement (to be mutated).
 	 * @return The faulty statement to be mutated.
 	 */
 	public SourceStatement getRandomStatement(){
 		SourceStatement statement = null;
+
+		do{
+            /* Compute a random spot. */
+            double random = Math.random() * this.totalWeight;
+            
+            /* Find the statement at that random spot. */
+            statement = this.statements.ceilingEntry(random).getValue();
+
+		} while(statement.inUse);
+
+		/* This statement is now in use. */
+		statement.inUse = true;
+
+		return statement;
+	}
+	
+	/**
+	 * Randomly selects and returns a faulty statement (to be mutated). Checks scope against
+	 * a destination (faulty) statement.
+	 * @return The faulty statement to be mutated.
+	 */
+	public SourceStatement getRandomStatement(SourceStatement destinationScope){
+		SourceStatement statement = null;
 		boolean inScope = false;
 
 		do{
-
             /* Compute a random spot. */
             double random = Math.random() * this.totalWeight;
             
@@ -62,7 +84,7 @@ public class Statements {
             statement = this.statements.ceilingEntry(random).getValue();
             
             /* Check that the statement variables are in scope. */
-            inScope = this.inScope(statement);
+            inScope = this.inScope(statement, destinationScope);
 
 		} while(statement.inUse || !inScope);
 
@@ -77,8 +99,8 @@ public class Statements {
 	 * @param statement
 	 * @return
 	 */
-	private boolean inScope(SourceStatement statement){
-        HashSet<String> methodScope = this.scope.get(statement.sourceFile + "." + this.getMethodName(statement.statement));
+	private boolean inScope(SourceStatement statement, SourceStatement destinationScope){
+        HashSet<String> methodScope = this.scope.get(destinationScope.sourceFile + "." + this.getMethodName(destinationScope.statement));
 		VarASTVisitor vav = new VarASTVisitor();
 		statement.statement.accept(vav);
 		

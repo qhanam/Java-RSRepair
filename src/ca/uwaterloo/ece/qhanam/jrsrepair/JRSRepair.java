@@ -191,7 +191,7 @@ public class JRSRepair {
 			mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
 			break;
 		case 2:
-			mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), null);
 			break;
 		default:
 			mutation = new ReplacementMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());

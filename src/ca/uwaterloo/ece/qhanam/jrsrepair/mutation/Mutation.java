@@ -62,7 +62,7 @@ public abstract class Mutation {
 		
 		/* Relinquish use of the statements. */
 		this.faulty.inUse = false;
-		this.seed.inUse = false;
+		if(this.seed != null) this.seed.inUse = false;
 	}
 
 	protected abstract void concreteUndo() throws Exception;

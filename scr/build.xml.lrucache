@@ -120,7 +120,10 @@
 	<target name="junit" depends="compile.tests"
 					description="Run JUnit test cases.">
 		<mkdir dir="${build.test.reports}"/>
-		<tstamp/>
+		<tstamp>
+			<format property="FILE_NAME" pattern="yyyyMMddHHmmssSSS"/>
+		</tstamp>
+		<echo> the current time is ${FILE_NAME}</echo>
 		<junit printsummary="yes" haltonfailure="no" showoutput="yes">
 			<formatter type="brief"/>
 			<classpath>
@@ -128,7 +131,7 @@
 				<pathelement location="${build.tests}"/>
 				<pathelement location="${junit.jar}"/>
 			</classpath>
-			<test name="${testcase}" fork="yes" todir="${build.test.reports}" outfile="TEST-${DSTAMP}${TSTAMP}">
+			<test name="${testcase}" fork="yes" todir="${build.test.reports}" outfile="TEST-${FILE_NAME}">
 				<formatter type="brief" usefile="false"/>
 			</test>
 		</junit>

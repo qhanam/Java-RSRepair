@@ -23,8 +23,6 @@ public class AdditionMutation extends Mutation {
 	 */
 	@Override
 	public void concreteMutate() throws Exception {
-		System.out.println("Applying addition mutation...");
-		
         /* Create a new block to insert in place of the deleted statement. */
         this.addedBlock = (Block) this.rewrite.getAST().createInstance(Block.class);
 

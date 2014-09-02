@@ -21,8 +21,6 @@ public class ReplacementMutation extends Mutation {
 	 */
 	@Override
 	public void concreteMutate() throws Exception {
-		System.out.println("Applying replacement mutation...");
-
         /* Make a copy of the seed statement and base it in the faulty statement's AST. */
         this.replacementNode = ASTNode.copySubtree(this.rewrite.getAST(), seed.statement);
         

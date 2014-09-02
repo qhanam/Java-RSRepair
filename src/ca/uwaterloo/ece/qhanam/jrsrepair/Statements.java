@@ -3,6 +3,7 @@ package ca.uwaterloo.ece.qhanam.jrsrepair;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.NavigableMap;
+import java.util.Random;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.Set;
@@ -27,11 +28,13 @@ public class Statements {
 	private NavigableMap<Double, SourceStatement> statements;
 	private double totalWeight; // We track the total weight so that we can randomly select a statement with weighting.
 	private HashMap<String, HashSet<String>> scope;
+	private Random random;
 
-	public Statements(HashMap<String, HashSet<String>> scope) { 
+	public Statements(HashMap<String, HashSet<String>> scope, long randomSeed) { 
 		this.statements = new TreeMap<Double, SourceStatement>();
 		this.totalWeight = 0;
 		this.scope = scope;
+		this.random = new Random(randomSeed);
     }
 	
 	/**
@@ -54,7 +57,7 @@ public class Statements {
 
 		do{
             /* Compute a random spot. */
-            double random = Math.random() * this.totalWeight;
+			double random = this.random.nextDouble() * this.totalWeight;
             
             /* Find the statement at that random spot. */
             statement = this.statements.ceilingEntry(random).getValue();
@@ -78,7 +81,7 @@ public class Statements {
 
 		do{
             /* Compute a random spot. */
-            double random = Math.random() * this.totalWeight;
+			double random = this.random.nextDouble() * this.totalWeight;
             
             /* Find the statement at that random spot. */
             statement = this.statements.ceilingEntry(random).getValue();

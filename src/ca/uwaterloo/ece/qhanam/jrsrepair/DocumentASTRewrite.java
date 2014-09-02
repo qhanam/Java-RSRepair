@@ -14,17 +14,20 @@ public class DocumentASTRewrite {
 	public IDocument document;
 	public IDocument modifiedDocument;
 	public ASTRewrite rewriter;
+	private boolean modified;
 	private boolean tainted;
 
 	public DocumentASTRewrite(IDocument document, ASTRewrite rewriter){
 		this.document = document;
 		this.rewriter = rewriter;
 		this.tainted = false;
+		this.modified = false;
 		
 		this.resetModifiedDocument();
 	}
 	
 	public void taintDocument(){
+		this.modified = true;
 		this.tainted = true;
 	}
 	
@@ -38,5 +41,9 @@ public class DocumentASTRewrite {
 	
 	public void resetModifiedDocument(){
 		this.modifiedDocument = new Document(document.get());
+	}
+	
+	public boolean isDocumentModified(){
+		return this.modified;
 	}
 }

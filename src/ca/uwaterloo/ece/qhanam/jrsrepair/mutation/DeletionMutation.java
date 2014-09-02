@@ -23,8 +23,6 @@ public class DeletionMutation extends Mutation {
 	 */
 	@Override
 	public void concreteMutate() throws Exception {
-		System.out.println("Applying deletion mutation...");
-		
         /* Create a new block to insert in place of the deleted statement. */
         this.emptyBlock = (Block) this.rewrite.getAST().createInstance(Block.class);
 

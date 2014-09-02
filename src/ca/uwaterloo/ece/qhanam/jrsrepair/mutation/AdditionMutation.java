@@ -11,8 +11,7 @@ import org.eclipse.text.edits.*;
 
 public class AdditionMutation extends Mutation {
 	
-	private ASTNode addedStatement; // The (copied) seed statement that was added before the faulty statement.
-	private UndoEdit undoEdit;		// Memento to undo the text edit performed on the this.document.
+	private Block addedBlock;		// The block that has been added containing the faulty and seed statements.
 	
 	public AdditionMutation(HashMap<String, DocumentASTRewrite> sourceFileContents, SourceStatement faulty, SourceStatement seed){
 		super(sourceFileContents, faulty, seed);
@@ -24,32 +23,27 @@ public class AdditionMutation extends Mutation {
 	 */
 	@Override
 	public void concreteMutate() throws Exception {
-		ASTNode parent = faulty.statement.getParent();
-		
-		/* Start by assuming all parents are block statements. Later we can serch for an ancestor that
-		 * is a Block statement */
-		AST ast = faulty.statement.getRoot().getAST();
-//		AST ast = this.rewrite.getAST();
-
 		System.out.println("Applying addition mutation...");
 		
-		if(parent instanceof Block){
-			/* Here we get the statement list for the Block (hence Block.STATEMENTS_PROPERTY) */
-            ListRewrite lrw = rewrite.getListRewrite(parent, Block.STATEMENTS_PROPERTY);
-            
-            /* Make a copy of the seed statement and base it in the faulty statement's AST. */
-            ASTNode s = ASTNode.copySubtree(ast, seed.statement);
-            
-            /* Store the added statement so we can undo the operation. */
-            this.addedStatement = s;
-            
-            /* Insert the statement into the AST before the faulty statement. */
-            lrw.insertBefore(s, faulty.statement, new TextEditGroup("TextEditGroup"));
+        /* Create a new block to insert in place of the deleted statement. */
+        this.addedBlock = (Block) this.rewrite.getAST().createInstance(Block.class);
 
-            /* Modify the source code file. */
-            TextEdit edits = rewrite.rewriteAST(this.document, null);
-            this.undoEdit = edits.apply(this.document, TextEdit.CREATE_UNDO);
-		}
+        /* Make a copy of the seed statement and base it in the faulty statement's AST. */
+        ASTNode seedCopy = ASTNode.copySubtree(this.rewrite.getAST(), seed.statement);
+        ASTNode faultyCopy = ASTNode.copySubtree(this.rewrite.getAST(), faulty.statement);
+        
+        /* Insert the seed and faulty statements into the new Block. */
+        ListRewrite lrwt = this.rewrite.getListRewrite(this.addedBlock, Block.STATEMENTS_PROPERTY);
+        lrwt.insertFirst(seedCopy, null);
+        lrwt.insertLast(faultyCopy, null);
+
+        /* Replace the faulty statement with the empty Block. */
+        rewrite.replace(faulty.statement, this.addedBlock, null);
+        
+        /* Modify the source code file. */
+        this.docrwt.resetModifiedDocument(); // Start with the original document to avoid the AST-doesn't-match-doc error.
+        TextEdit edits = rewrite.rewriteAST(this.docrwt.modifiedDocument, null);
+        edits.apply(this.docrwt.modifiedDocument, TextEdit.NONE);
 	}
 	
 	/**
@@ -57,12 +51,13 @@ public class AdditionMutation extends Mutation {
 	 */
 	@Override
 	public void concreteUndo() throws Exception{
-		if(this.addedStatement == null || this.undoEdit == null) return; // Nothing to do.
-        
         /* Undo the edit to the AST. */
-        this.rewrite.remove(this.addedStatement, null);
-        this.undoEdit.apply(this.document);
-        this.undoEdit = null;
+        this.rewrite.replace(this.addedBlock, this.faulty.statement, null);
+
+		/* We need to write the undo changes back to the source file because of recursion. */
+        this.docrwt.resetModifiedDocument(); // Start with the original document to avoid the AST-doesn't-match-doc error.
+        TextEdit edits = rewrite.rewriteAST(this.docrwt.modifiedDocument, null);
+        edits.apply(this.docrwt.modifiedDocument, TextEdit.NONE);
 	}
 
 }

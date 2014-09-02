@@ -1,5 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedList;
 import java.util.Collection;
@@ -26,6 +27,8 @@ public class JRSRepair {
 
 	private String[] sourceFilesArray;
     private HashMap<String, DocumentASTRewrite> sourceFileContents;
+    
+    private HashMap<String, HashSet<String>> scope;
     
     private Statements faultyStatements;
     private Statements seedStatements;
@@ -57,6 +60,8 @@ public class JRSRepair {
 		this.mutationAttempts = mutationAttempts;
 		
 		this.testExecutor = testExecutor;
+		
+		this.scope = new HashMap<String, HashSet<String>>();
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);
@@ -88,7 +93,7 @@ public class JRSRepair {
 		
 		/* Set up the AST handler. We need to create LineCoverage and Statements classes to store 
 		 * and filter the statements from the ASTs. */
-		FileASTRequestor fileASTRequestor = new MutationASTRequestor(sourceFileContents, faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
+		FileASTRequestor fileASTRequestor = new MutationASTRequestor(sourceFileContents, scope, faultyLineCoverage, seedLineCoverage, faultyStatements, seedStatements);
 		
 		/* createASTs(
 		 * String[] sourceFilePaths, 
@@ -180,7 +185,7 @@ public class JRSRepair {
 	private Mutation getRandomMutation(){
 		Mutation mutation;
 		int index = (new Double(Math.ceil((Math.random() * 3)))).intValue();
-		index = 2;
+		index = 1;
 		
 		switch(index){
 		case 1:

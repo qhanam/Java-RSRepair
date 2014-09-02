@@ -1,6 +1,8 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -17,6 +19,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
  */
 public class MutationASTRequestor extends FileASTRequestor {
 	
+	private HashMap<String, HashSet<String>> scope;
 	private HashMap<String, DocumentASTRewrite> sourceFileContents;
     private LineCoverage faultyLineCoverage;
     private LineCoverage seedLineCoverage;
@@ -27,12 +30,15 @@ public class MutationASTRequestor extends FileASTRequestor {
 	 * @param faultyStatements
 	 * @param seedStatements
 	 */
-	public MutationASTRequestor(HashMap<String, DocumentASTRewrite> sourceFileContents, LineCoverage faultyLineCoverage, LineCoverage seedLineCoverage, Statements faultyStatements, Statements seedStatements){
+	public MutationASTRequestor(HashMap<String, DocumentASTRewrite> sourceFileContents, HashMap<String, HashSet<String>> scope, 
+								LineCoverage faultyLineCoverage, LineCoverage seedLineCoverage, 
+								Statements faultyStatements, Statements seedStatements){
 		this.sourceFileContents = sourceFileContents;
 		this.faultyLineCoverage = faultyLineCoverage;
 		this.seedLineCoverage = seedLineCoverage;
 		this.faultyStatements = faultyStatements;
 		this.seedStatements = seedStatements;
+		this.scope = scope;
 	}
 	
 	@Override
@@ -56,6 +62,14 @@ public class MutationASTRequestor extends FileASTRequestor {
         /* Store the statements that are covered by test cases. */
         StatementASTVisitor statementASTVisitor = new StatementASTVisitor(sourceFilePath);
         cu.accept(statementASTVisitor);
+        
+        /* Get the member variable names. */
+        ClassVarASTVisitor cvav = new ClassVarASTVisitor();
+        cu.accept(cvav);
+
+        /* Build a HashSet of variable names for each method. This is the scope. */
+        MethodVarASTVisitor mvav = new MethodVarASTVisitor(sourceFilePath, cvav.variableNames);
+        cu.accept(mvav);
 	}
 	
 	/**
@@ -122,35 +136,79 @@ public class MutationASTRequestor extends FileASTRequestor {
 		public boolean visit(WhileStatement node){insertStatement(node); return true;}
 	}
 	
-    /** 
-     * Prints all the variables declared in the AST. This is useful for:
-     * 	1. Finding the variables used in a statement.
-     * 	2. Finding the variables used in a class.
-     * 
-     *  TODO: To be more precise, we should handle member variables and method
-     *   	  variables separately (i.e., omit local variables from methods we 
-     *   	  are not mutating).
-     */
-	@SuppressWarnings("unused")
-	private class VarASTVisitor extends ASTVisitor{
-		public boolean visit(VariableDeclarationFragment var) {
-			System.out.println("variable: " + var.getName());
-
-			return false;
+	/**
+	 * Collects the names of member variables used in the method.
+	 * @author qhanam
+	 */
+	private class MethodVarASTVisitor extends ASTVisitor{
+		public HashSet<String> variableNames;
+		public String sourceFilePath;
+		
+		/**
+		 * @param memberVariableNames The collection of member variables from the method's class.
+		 */
+		public MethodVarASTVisitor(String sourceFilePath, Stack<String> memberVariableNames){
+			this.variableNames = new HashSet<String>(memberVariableNames);
+			this.sourceFilePath = sourceFilePath;
 		}
 
+		/**
+		 * Get the names of variables declared in the method.
+		 */
 		public boolean visit(MethodDeclaration md) {
-
-			if (md.getName().toString().equals("method_test2")) {
-				md.accept(new ASTVisitor() {
-					public boolean visit(VariableDeclarationFragment fd) {
-						System.out.println("in method: " + fd);
-						return false;
-					}
-				});
-			}
+			System.out.println("Variables for method " + md.getName().toString() + ":");
+            md.accept(new ASTVisitor() {
+                public boolean visit(VariableDeclarationFragment var) {
+                	MethodVarASTVisitor.this.variableNames.add(var.getName().toString());
+                    System.out.println("Local variable: " + var.getName());
+                    return false;
+                }
+            });
+            MutationASTRequestor.this.scope.put(this.sourceFilePath + "." + md.getName().toString(), this.variableNames);
 			return false;
-
 		}
+		
+		/**
+		 * Maybe don't use this yet...
+		 * 
+		 * TODO: Build a specific scope for every class in a compilation unit.
+		 * @param md
+		 * @return
+		 */
+		@SuppressWarnings("unused")
+		private String getClassPath(MethodDeclaration md){
+			ASTNode node = md;
+			while(!(node instanceof AbstractTypeDeclaration)){
+				node = node.getParent();
+			}
+			AbstractTypeDeclaration atd = (AbstractTypeDeclaration) node;
+			return ((CompilationUnit) atd.getRoot()).getPackage().getName().toString() + "." + atd.getName().toString();
+		}
+	}
+
+	/**
+	 * Collects the names of member variables used in the class.
+	 * @author qhanam
+	 */
+	private class ClassVarASTVisitor extends ASTVisitor{
+		public Stack<String> variableNames;
+		
+		public ClassVarASTVisitor(){
+			this.variableNames = new Stack<String>();
+		}
+		
+		/**
+		 * Get the names of member variables declared in this class.
+		 */
+		public boolean visit(VariableDeclarationFragment var) {
+			this.variableNames.add(var.getName().toString());
+			System.out.println("Member variable: " + var.getName());
+			return false;
+		}
+
+		/**
+		 * We are only getting member variables, so don't visit anything below methods.
+		 */
+		public boolean visit(MethodDeclaration md) { return false; }
 	}
 }

@@ -1,8 +1,17 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.NavigableMap;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.Set;
+
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 /**
  * Stores a list of statements and their weights. Randomly selects statements (with probabilities
@@ -21,10 +30,12 @@ public class Statements {
 	
 	private NavigableMap<Double, SourceStatement> statements;
 	private double totalWeight; // We track the total weight so that we can randomly select a statement with weighting.
+	private HashMap<String, HashSet<String>> scope;
 
-	public Statements() { 
+	public Statements(HashMap<String, HashSet<String>> scope) { 
 		this.statements = new TreeMap<Double, SourceStatement>();
 		this.totalWeight = 0;
+		this.scope = scope;
     }
 	
 	/**
@@ -44,6 +55,7 @@ public class Statements {
 	 */
 	public SourceStatement getRandomStatement(){
 		SourceStatement statement = null;
+		boolean inScope = false;
 
 		do{
 
@@ -52,14 +64,49 @@ public class Statements {
             
             /* Find the statement at that random spot. */
             statement = this.statements.ceilingEntry(random).getValue();
+            
+            /* Check that the statement variables are in scope. */
+            inScope = this.inScope(statement);
 
-		} while(statement.inUse);
+		} while(statement.inUse || !inScope);
 
 		/* This statement is now in use. */
 		statement.inUse = true;
 
 		return statement;
 	}
+	
+	/**
+	 * Check that all the variables used in the statement are in the scope.
+	 * @param statement
+	 * @return
+	 */
+	private boolean inScope(SourceStatement statement){
+        HashSet<String> methodScope = this.scope.get(statement.sourceFile + "." + this.getMethodName(statement.statement));
+		VarASTVisitor vav = new VarASTVisitor();
+		statement.statement.accept(vav);
+		
+		/* If there are no variables used, the statement is in scope. */
+		if(vav.variableNames.size() == 0) return true;
+		
+		/* If there is at least one SimpleName matching a variable in scope,
+		 * the statement might be in scope so we return true. */
+		for(String variableName : vav.variableNames){
+			if(!methodScope.contains(variableName)) return true;
+		}
+		
+		/* The statement isn't in scope. */
+		return false;
+	}
+
+    private String getMethodName(ASTNode node){
+        while(!(node instanceof MethodDeclaration)){
+        	if(node.equals(node.getRoot())) return "";
+            node = node.getParent();
+        }
+        MethodDeclaration md = (MethodDeclaration) node;
+        return md.getName().toString();
+    }
 	
 	/**
 	 * Returns a string containing the statements in this set and their weights.
@@ -81,5 +128,25 @@ public class Statements {
 	public boolean isEmpty(){
 		if(this.statements.size() == 0) return true;
 		return false;
+	}	
+	
+	/**
+	 * Collects potential variable usages in a statement.
+	 * @author qhanam
+	 */
+	private class VarASTVisitor extends ASTVisitor{
+		public Stack<String> variableNames;
+		
+		public VarASTVisitor(){
+			this.variableNames = new Stack<String>();
+		}
+		
+		/**
+		 * Get the names of potential variables used in this statement.
+		 */
+		public boolean visit(SimpleName var) {
+			this.variableNames.add(var.toString());
+			return false;
+		}
 	}
 }

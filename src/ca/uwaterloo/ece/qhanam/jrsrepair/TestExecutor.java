@@ -16,12 +16,14 @@ public class TestExecutor {
 	
 	private File baseDirectory;
 	private String antPath;
-	private String antTarget;
+	private String antCompileTarget;
+	private String antTestTarget;
 
-	public TestExecutor(File baseDirectory, String antPath, String antTarget){
+	public TestExecutor(File baseDirectory, String antPath, String antCompileTarget, String antTestTarget){
 		this.baseDirectory = baseDirectory;
 		this.antPath = antPath;
-		this.antTarget = antTarget;
+		this.antCompileTarget = antCompileTarget;
+		this.antTestTarget = antTestTarget;
 	}
 	
 	/**
@@ -31,39 +33,63 @@ public class TestExecutor {
 	 */
 	@SuppressWarnings("unused")
 	public boolean runTests() throws Exception{
-		ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTarget);
-		builder.directory(this.baseDirectory);
-		Process process = builder.start();
-	    
-	    BufferedReader stdInput = new BufferedReader(new 
-	               InputStreamReader(process.getInputStream()));
+		
+		/* Attempt to compile the program. */
+		try{
+            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antCompileTarget);
+            builder.directory(this.baseDirectory);
+            Process process = builder.start();
+            
+            BufferedReader stdInput = new BufferedReader(new 
+                       InputStreamReader(process.getInputStream()));
 
-        BufferedReader stdError = new BufferedReader(new 
-             InputStreamReader(process.getErrorStream()));
-	    
-	    /* Read the output from the command. */
-        String output = "";
-        String s = null;
-        while ((s = stdInput.readLine()) != null) {
-        	output += s;
-        }
-        
-	        // read any errors from the attempted command
-//	        System.out.println("Checkout script error output:");
-//	        while ((s = stdError.readLine()) != null) {
-//	            System.out.println(s);
-//	        }
-	    
-	    try{
-	      process.waitFor();
-	      
-	      /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
-	      if(output.indexOf("BUILD SUCCESSFUL") < 0) return false;
-	      return true;
+            /* Read the output from the command. */
+            String output = "";
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                output += s;
+            }
+            
+            try{
+              process.waitFor();
+              
+              /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
+              if(output.indexOf("BUILD SUCCESSFUL") < 0) return false;
 
-	    }catch(InterruptedException e){ 
-	      System.out.println("Interrupted Exception during cvsCheckout.");
-	      throw e;
-	    }  	
+            }catch(InterruptedException e){ 
+              System.out.println("Interrupted Exception during cvsCheckout.");
+              throw e;
+            }  	
+		} finally { }
+	    
+	    /* The program has successfully compiled, so run the JUnit tests. */
+		try{
+            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
+            builder.directory(this.baseDirectory);
+            Process process = builder.start();
+            
+            BufferedReader stdInput = new BufferedReader(new 
+                       InputStreamReader(process.getInputStream()));
+
+            /* Read the output from the command. */
+            String output = "";
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                output += s;
+            }
+            
+            try{
+              process.waitFor();
+              
+              /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
+              if(output.indexOf("BUILD SUCCESSFUL") < 0) return true;
+
+            }catch(InterruptedException e){ 
+              System.out.println("Interrupted Exception during cvsCheckout.");
+              throw e;
+            }  	
+		} finally { }
+
+        return true;
 	}
 }

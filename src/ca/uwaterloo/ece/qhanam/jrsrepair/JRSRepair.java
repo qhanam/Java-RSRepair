@@ -204,8 +204,7 @@ public class JRSRepair {
 	private Mutation getRandomMutation(){
 		SourceStatement faultyStatement;
 		Mutation mutation;
-		int index = (new Double(Math.ceil((this.random.nextDouble() * 2)))).intValue();
-		//index = 100;
+		int index = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
 		
 		switch(index){
 		case 100: // Useful to make sure the program compiles.

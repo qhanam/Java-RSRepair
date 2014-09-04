@@ -18,7 +18,7 @@ public class SampleUse {
 	public static final String ANT_COMPILE_TARGET = "junit";
 	public static final String ANT_TEST_TARGET = "junit";
 	
-	public static final long RANDOM_SEED = 5;
+	public static final long RANDOM_SEED = 10;
 
 	public static void main(String[] args) throws Exception {
 		TestExecutor testExecutor = new TestExecutor(new File(ANT_BASE_DIR), ANT_PATH, ANT_COMPILE_TARGET, ANT_TEST_TARGET);

@@ -47,7 +47,7 @@ public class LineCoverage {
 			}
 			else{
 				reader.close();
-				throw new Exception("LineCoverage.readCoverageFile: file not formatted properly... too many tokens.");
+				throw new Exception("LineCoverage.readCoverageFile: file not formatted properly... too many tokens.\n" + line);
 			}
 		}
 		reader.close();

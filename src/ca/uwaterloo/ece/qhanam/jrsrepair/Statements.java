@@ -71,13 +71,14 @@ public class Statements {
 	}
 	
 	/**
-	 * Randomly selects and returns a faulty statement (to be mutated). Checks scope against
+	 * Randomly selects and returns a seed statement. Checks scope against
 	 * a destination (faulty) statement.
 	 * @return The faulty statement to be mutated.
 	 */
 	public SourceStatement getRandomStatement(SourceStatement destinationScope){
 		SourceStatement statement = null;
 		boolean inScope = false;
+		int ctr = 0;
 
 		do{
             /* Compute a random spot. */
@@ -89,6 +90,13 @@ public class Statements {
             /* Check that the statement variables are in scope. */
             inScope = this.inScope(statement, destinationScope);
 
+            /* Just in case, let's have an escape plan. */
+            ctr++;
+            if(ctr > 500 && !statement.inUse) {
+            	System.err.println("Could not find an unused statement in scope in " + ctr + " iterations.");
+            	break;
+            }
+         
 		} while(statement.inUse || !inScope);
 
 		/* This statement is now in use. */
@@ -109,6 +117,9 @@ public class Statements {
 		
 		/* If there are no variables used, the statement is in scope. */
 		if(vav.variableNames.size() == 0) return true;
+		
+		/* TODO: Why does this happen? */
+		if(methodScope == null) return false;
 		
 		/* If there is at least one SimpleName matching a variable in scope,
 		 * the statement might be in scope so we return true. */

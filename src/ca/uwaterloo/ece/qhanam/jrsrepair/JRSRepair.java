@@ -126,6 +126,7 @@ public class JRSRepair {
 		}
 		finally {
             this.restoreOriginalProgram(); // Leave the program in its original state (hopefully)
+            System.out.println("Finished!");
 		}
 	}
 
@@ -165,7 +166,12 @@ public class JRSRepair {
             }
             finally { 
                 /* Roll back the current mutation. */
-                if(!compiled) mutation.undo(); 
+                if(!compiled) {
+                	System.out.print(" - Did not compile\n");
+                	mutation.undo(); 
+                } else {
+                	System.out.print(" - Compiled!\n");
+                }
             }
 
             attemptCounter++;
@@ -190,21 +196,29 @@ public class JRSRepair {
 	 * @return A Mutation memento object for applying one mutation to a faulty statement.
 	 */
 	private Mutation getRandomMutation(){
+		SourceStatement faultyStatement;
 		Mutation mutation;
-		int index = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
+		int index = (new Double(Math.ceil((this.random.nextDouble() * 2)))).intValue();
+		//index = 100;
 		
 		switch(index){
+		case 100: // Useful to make sure the program compiles.
+			System.out.print("Applying null mutation...");
+			mutation = new NullMutation(sourceFileContents, faultyStatements.getRandomStatement(), null);
+			break;
 		case 1:
-			System.out.println("Applying addition mutation...");
-			mutation = new AdditionMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			System.out.print("Applying addition mutation...");
+			faultyStatement = faultyStatements.getRandomStatement();
+			mutation = new AdditionMutation(sourceFileContents, faultyStatement, seedStatements.getRandomStatement(faultyStatement));
 			break;
 		case 2:
-			System.out.println("Applying deletion mutation...");
-			mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), null);
+			System.out.print("Applying replacement mutation...");
+			faultyStatement = faultyStatements.getRandomStatement();
+			mutation = new ReplacementMutation(sourceFileContents, faultyStatement, seedStatements.getRandomStatement(faultyStatement));
 			break;
 		default:
-			System.out.println("Applying replacement mutation...");
-			mutation = new ReplacementMutation(sourceFileContents, faultyStatements.getRandomStatement(), seedStatements.getRandomStatement());
+			System.out.print("Applying deletion mutation...");
+			mutation = new DeletionMutation(sourceFileContents, faultyStatements.getRandomStatement(), null);
 			break;
 		}
 		
@@ -252,19 +266,18 @@ public class JRSRepair {
 	 * @throws Exception
 	 */
 	private static String[] getSourceFiles(String[] sourcePaths) throws Exception{
-		Collection<File> sourceFiles;
-		String[] sourceFilesArray = null;;
+		Collection<File> sourceFiles = new LinkedList<File>();
+		String[] sourceFilesArray = null;
 
 		for(String sourcePath : sourcePaths){
 			File sourceFile = new File(sourcePath);
 			
             /* If the buggy file is a directory, get all the java files in that directory. */
             if(sourceFile.isDirectory()){
-                sourceFiles = FileUtils.listFiles(sourceFile, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
+                sourceFiles.addAll(FileUtils.listFiles(sourceFile, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE));
             }
             /* The buggy file may also be a source code file. */
             else{
-                sourceFiles = new LinkedList<File>();
                 sourceFiles.add(sourceFile);
             }
             

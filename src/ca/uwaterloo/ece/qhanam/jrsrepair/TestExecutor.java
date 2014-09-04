@@ -31,7 +31,6 @@ public class TestExecutor {
 	 * @return true if the program under repair compiled, false otherwise.
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unused")
 	public boolean runTests() throws Exception{
 		
 		/* Attempt to compile the program. */

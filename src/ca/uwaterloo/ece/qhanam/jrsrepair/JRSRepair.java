@@ -22,7 +22,7 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
 	
-	private File sourcePath;
+	private String[] sourcePaths;
 	private File faultyCoverageFile;
 	private File seedCoverageFile;
 
@@ -48,9 +48,9 @@ public class JRSRepair {
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
-	 * @param sourcePath The path to the source folder of the program we are mutating.
+	 * @param sourcePaths The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(File sourcePath, File faultyCoverageFile, File seedCoverageFile, 
+	public JRSRepair(String[] sourcePaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
 					 long randomSeed, TestExecutor testExecutor) throws Exception {
 		this.scope = new HashMap<String, HashSet<String>>();
@@ -60,7 +60,7 @@ public class JRSRepair {
 		this.faultyStatements = new Statements(this.scope, this.random.nextLong());
 		this.seedStatements = new Statements(this.scope, this.random.nextLong());
 
-		this.sourcePath = sourcePath;
+		this.sourcePaths = sourcePaths;
 		this.faultyCoverageFile = faultyCoverageFile;
 		this.seedCoverageFile = seedCoverageFile;
 		
@@ -71,7 +71,7 @@ public class JRSRepair {
 		this.testExecutor = testExecutor;
 
 		/* Get the list of source files for us to mutate. */
-		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePath);
+		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePaths);
 		
 		/* Load the source code from the .java files. */
 		this.sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
@@ -247,30 +247,34 @@ public class JRSRepair {
 	/**
 	 * Generates a list of java source files given a directory, or returns the
 	 * file specified in an array.
-	 * @param sourcePath The path to the file/directory.
+	 * @param sourcePaths The path to the file/directory.
 	 * @return An array of paths to Java source files.
 	 * @throws Exception
 	 */
-	private static String[] getSourceFiles(File sourcePath) throws Exception{
+	private static String[] getSourceFiles(String[] sourcePaths) throws Exception{
 		Collection<File> sourceFiles;
-		String[] sourceFilesArray;
+		String[] sourceFilesArray = null;;
 
-		/* If the buggy file is a directory, get all the java files in that directory. */
-		if(sourcePath.isDirectory()){
-			sourceFiles = FileUtils.listFiles(sourcePath, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
-		}
-		/* The buggy file may also be a source code file. */
-		else{
-			sourceFiles = new LinkedList<File>();
-			sourceFiles.add(sourcePath);
-		}
-		
-		/* Create the String array. */
-		sourceFilesArray = new String[sourceFiles.size()];
-		int i = 0;
-		for(File sourceFile : sourceFiles){
-			sourceFilesArray[i] = sourceFile.getCanonicalPath();
-			i++;
+		for(String sourcePath : sourcePaths){
+			File sourceFile = new File(sourcePath);
+			
+            /* If the buggy file is a directory, get all the java files in that directory. */
+            if(sourceFile.isDirectory()){
+                sourceFiles = FileUtils.listFiles(sourceFile, new SuffixFileFilter(".java"), TrueFileFilter.INSTANCE);
+            }
+            /* The buggy file may also be a source code file. */
+            else{
+                sourceFiles = new LinkedList<File>();
+                sourceFiles.add(sourceFile);
+            }
+            
+            /* Create the String array. */
+            sourceFilesArray = new String[sourceFiles.size()];
+            int i = 0;
+            for(File file : sourceFiles){
+                sourceFilesArray[i] = file.getCanonicalPath();
+                i++;
+            }
 		}
 		
 		return sourceFilesArray;

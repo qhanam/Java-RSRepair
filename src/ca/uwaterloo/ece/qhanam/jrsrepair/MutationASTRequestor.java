@@ -106,7 +106,7 @@ public class MutationASTRequestor extends FileASTRequestor {
                 MutationASTRequestor.this.faultyStatements.addStatement(new SourceStatement(this.sourceFilePath, s), weight);
 			}
 			if((weight = MutationASTRequestor.this.seedLineCoverage.contains(node)) != null){
-                MutationASTRequestor.this.seedStatements.addStatement(new SourceStatement(this.sourceFilePath, s), 1);
+                MutationASTRequestor.this.seedStatements.addStatement(new SourceStatement(this.sourceFilePath, s), weight);
 			}
 		}
 		

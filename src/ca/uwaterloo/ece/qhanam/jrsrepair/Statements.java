@@ -124,7 +124,7 @@ public class Statements {
 		/* If there is at least one SimpleName matching a variable in scope,
 		 * the statement might be in scope so we return true. */
 		for(String variableName : vav.variableNames){
-			if(!methodScope.contains(variableName)) return true;
+			if(methodScope.contains(variableName)) return true;
 		}
 		
 		/* The statement isn't in scope. */

@@ -49,4 +49,8 @@ public class DeletionMutation extends Mutation {
         edits.apply(this.docrwt.modifiedDocument, TextEdit.NONE);
 	}
 
+	@Override
+	public String toString(){
+		return "Deletion " + super.toString();
+	}
 }

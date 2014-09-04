@@ -22,4 +22,9 @@ public class NullMutation extends Mutation {
 	 */
 	@Override
 	public void concreteUndo() throws Exception{ /* Don't do anything. */ }
+	
+	@Override
+	public String toString(){
+		return "Null " + super.toString();
+	}
 }

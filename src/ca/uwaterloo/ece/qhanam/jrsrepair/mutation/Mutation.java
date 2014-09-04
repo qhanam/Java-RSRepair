@@ -66,4 +66,14 @@ public abstract class Mutation {
 	}
 
 	protected abstract void concreteUndo() throws Exception;
+	
+	@Override
+	public String toString(){
+		String s = "\nFaulty = " + this.faulty.sourceFile + "@" + this.faulty.statement.getStartPosition() + ": " + this.faulty.statement + "\n\n";
+		s += "Seed = ";
+		if(this.seed == null) s += "null";
+		else s += this.seed.sourceFile + "@" + this.seed.statement.getStartPosition() + ": " + this.seed.statement + "\n\n============================";
+
+		return s;
+	}
 }

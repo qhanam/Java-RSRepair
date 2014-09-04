@@ -46,4 +46,9 @@ public class ReplacementMutation extends Mutation {
         TextEdit edits = rewrite.rewriteAST(this.docrwt.modifiedDocument, null);
         edits.apply(this.docrwt.modifiedDocument, TextEdit.NONE);
 	}
+	
+	@Override
+	public String toString(){
+		return "Replacement " + super.toString();
+	}
 }

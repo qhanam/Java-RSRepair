@@ -1,11 +1,16 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.LinkedList;
 import java.util.Collection;
+import java.util.Stack;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -45,6 +50,9 @@ public class JRSRepair {
 	
 	private TestExecutor testExecutor;
 	
+	private Stack<String> patches;
+	private File patchDirectory;
+	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
@@ -52,7 +60,7 @@ public class JRSRepair {
 	 */
 	public JRSRepair(String[] sourcePaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
-					 long randomSeed, TestExecutor testExecutor) throws Exception {
+					 long randomSeed, File patchDirectory, TestExecutor testExecutor) throws Exception {
 		this.scope = new HashMap<String, HashSet<String>>();
 		
 		this.random = new Random(randomSeed);
@@ -79,6 +87,10 @@ public class JRSRepair {
 		/* Load the line coverage. */
 		this.faultyLineCoverage = new LineCoverage(this.faultyCoverageFile);
 		this.seedLineCoverage = new LineCoverage(this.seedCoverageFile);
+		
+		/* Initialize the patch-building stack. */
+		this.patches = new Stack<String>();
+		this.patchDirectory = patchDirectory;
 	}
 	
 	/**
@@ -121,7 +133,7 @@ public class JRSRepair {
 		try{
 			for(int i = 0; i < this.mutationCandidates; i++) {
 				System.out.println("Running candidate " + (i + 1) + " ...");
-                this.mutationIteration(1);
+                this.mutationIteration(i + 1, 1);
 			}
 		}
 		finally {
@@ -136,7 +148,7 @@ public class JRSRepair {
 	 * attempts multiple mutations at a time before rolling back their changes. 
 	 * @param generation The number of mutations that have already been applied.
 	 */
-	private void mutationIteration(int generation) throws Exception{
+	private void mutationIteration(int candidate, int generation) throws Exception{
         /* If we can't find a solution within some number of iterations, abort. */
         int attemptCounter = 0;
         
@@ -144,7 +156,7 @@ public class JRSRepair {
         System.out.println("Running generation " + generation + " ...");
         
         Mutation mutation = null;
-        boolean compiled = false;
+        int compiled = -2;
         
         try{
             /* We need to ensure the first levels compile or else the rest of the
@@ -167,34 +179,69 @@ public class JRSRepair {
                 }
                 finally { 
                     /* Roll back the current mutation. */
-                    if(!compiled) {
+                    if(compiled < 0) {
                         System.out.print(" - Did not compile\n");
                         mutation.undo(); 
                     } else {
-                        System.out.print(" - Compiled!\n");
+                    	this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                        System.out.print(" - Compiled!");
                     }
                 }
 
                 attemptCounter++;
 
-            } while(!compiled && attemptCounter < this.mutationAttempts);
+            } while(compiled < 0 && attemptCounter < this.mutationAttempts);
         
             /* Recurse to the next level of mutations. */
             if(generation < this.mutationGenerations){ 
-                this.mutationIteration(generation + 1);
+                this.mutationIteration(candidate, generation + 1);
             }
 
-            if(compiled) mutation.undo();
+            if(compiled >= 0) {
+            	if(compiled > 0){
+            		System.out.print(" Passed!\n");
+            		this.logSuccesfullPatch(candidate, generation);
+            	}
+            	else System.out.print("\n");
+
+            	this.patches.pop();
+            	mutation.undo();
+            }
+            else System.out.print("\n");
 
         } catch (Exception e) {
             /* For robustness, reset the program if this is the first generation and continue. */
         	if(generation == 1){
                 System.err.println("JRSRepair: Exception thrown during mutation recursion.");
                 this.restoreOriginalProgram();
+                this.patches.clear();
         	} else {
         		throw e;
         	}
         } 
+	}
+	
+	/**
+	 * Writes the mutation operations to a file. These represent a (successful?) fix.
+	 * @throws Exception
+	 */
+	private void logSuccesfullPatch(int candidate, int generation){
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+		Date date = new Date();
+		File file = new File(this.patchDirectory, "Candidate" + candidate + "_Generation" + generation + "_" + dateFormat.format(date));
+		BufferedWriter out = null;
+		
+        try{
+            file.createNewFile();
+            out = new BufferedWriter(new FileWriter(file));
+            for(String s : this.patches){
+                out.write(s);
+            }
+        } catch(Exception e) { }
+
+        try{
+            out.close();
+        } catch(Exception e) { }
 	}
 	
 	/**

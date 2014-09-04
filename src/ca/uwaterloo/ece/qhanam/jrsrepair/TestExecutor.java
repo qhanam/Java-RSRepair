@@ -28,10 +28,10 @@ public class TestExecutor {
 	
 	/**
 	 * Run the script (e.g., ant) to compile the program and run the JUnit test cases.
-	 * @return true if the program under repair compiled, false otherwise.
+	 * @return -1 = failed to compile, 0 = compiled, 1 = passed all test cases
 	 * @throws Exception
 	 */
-	public boolean runTests() throws Exception{
+	public int runTests() throws Exception{
 		
 		/* Attempt to compile the program. */
 		try{
@@ -53,7 +53,7 @@ public class TestExecutor {
               process.waitFor();
               
               /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
-              if(output.indexOf("BUILD SUCCESSFUL") < 0) return false;
+              if(output.indexOf("BUILD SUCCESSFUL") < 0) return -1;
 
             }catch(InterruptedException e){ 
               System.out.println("Interrupted Exception during cvsCheckout.");
@@ -81,7 +81,7 @@ public class TestExecutor {
               process.waitFor();
               
               /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-              if(output.indexOf("BUILD SUCCESSFUL") < 0) return true;
+              if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
 
             }catch(InterruptedException e){ 
               System.out.println("Interrupted Exception during cvsCheckout.");
@@ -89,6 +89,6 @@ public class TestExecutor {
             }  	
 		} finally { }
 
-        return true;
+        return 0;
 	}
 }

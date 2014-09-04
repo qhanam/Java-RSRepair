@@ -9,7 +9,7 @@ public class SampleUse {
 	public static final String FAULTY_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/faulty.cov";
 	public static final String SEED_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/seed.cov";
 	
-	public static final int MUTATION_CANDIDATES = 100;
+	public static final int MUTATION_CANDIDATES = 12;
 	public static final int MUTATION_GENERATIONS = 1;
 	public static final int MUTATION_ATTEMPTS = 10;
 	

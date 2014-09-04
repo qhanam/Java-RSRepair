@@ -156,12 +156,13 @@ public class JRSRepair {
         System.out.println("Running generation " + generation + " ...");
         
         Mutation mutation = null;
-        int compiled = -2;
+        int compiled = -1;
         
         try{
             /* We need to ensure the first levels compile or else the rest of the
              * mutations won't be useful. */
             do {
+            	compiled = -1;
 
                 /* Get a random mutation operation to apply. */
                 mutation = this.getRandomMutation();

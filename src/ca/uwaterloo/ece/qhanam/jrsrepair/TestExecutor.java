@@ -81,6 +81,7 @@ public class TestExecutor {
               process.waitFor();
               
               /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
+              Thread.sleep(1000);
               if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
 
             }catch(InterruptedException e){ 

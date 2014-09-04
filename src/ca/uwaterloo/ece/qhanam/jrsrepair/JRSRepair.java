@@ -146,49 +146,55 @@ public class JRSRepair {
         Mutation mutation = null;
         boolean compiled = false;
         
-        /* We need to ensure the first levels compile or else the rest of the
-         * mutations won't be useful. */
-        do {
-
-            /* Get a random mutation operation to apply. */
-            mutation = this.getRandomMutation();
-            
-            /* Apply the mutation to the AST + Document. */
-            mutation.mutate();
-            this.writeChangesToDisk();
-            
-            try{
-                /* Compile the program and execute the test cases. */
-                compiled = this.testExecutor.runTests();
-            } catch (Exception e){
-                System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
-                System.err.println(e.getMessage());
-            }
-            finally { 
-                /* Roll back the current mutation. */
-                if(!compiled) {
-                	System.out.print(" - Did not compile\n");
-                	mutation.undo(); 
-                } else {
-                	System.out.print(" - Compiled!\n");
-                }
-            }
-
-            attemptCounter++;
-
-        } while(!compiled && attemptCounter < this.mutationAttempts);
-        
         try{
+            /* We need to ensure the first levels compile or else the rest of the
+             * mutations won't be useful. */
+            do {
+
+                /* Get a random mutation operation to apply. */
+                mutation = this.getRandomMutation();
+                
+                /* Apply the mutation to the AST + Document. */
+                mutation.mutate();
+                this.writeChangesToDisk();
+                
+                try{
+                    /* Compile the program and execute the test cases. */
+                    compiled = this.testExecutor.runTests();
+                } catch (Exception e){
+                    System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
+                    System.err.println(e.getMessage());
+                }
+                finally { 
+                    /* Roll back the current mutation. */
+                    if(!compiled) {
+                        System.out.print(" - Did not compile\n");
+                        mutation.undo(); 
+                    } else {
+                        System.out.print(" - Compiled!\n");
+                    }
+                }
+
+                attemptCounter++;
+
+            } while(!compiled && attemptCounter < this.mutationAttempts);
+        
             /* Recurse to the next level of mutations. */
             if(generation < this.mutationGenerations){ 
                 this.mutationIteration(generation + 1);
             }
-        } catch (Exception e) {
-            System.err.println("JRSRepair: Exception thrown during mutation recursion.");
-        } finally { 
-            /* Roll back the current mutation. */
+
             if(compiled) mutation.undo();
-        }
+
+        } catch (Exception e) {
+            /* For robustness, reset the program if this is the first generation and continue. */
+        	if(generation == 1){
+                System.err.println("JRSRepair: Exception thrown during mutation recursion.");
+                this.restoreOriginalProgram();
+        	} else {
+        		throw e;
+        	}
+        } 
 	}
 	
 	/**

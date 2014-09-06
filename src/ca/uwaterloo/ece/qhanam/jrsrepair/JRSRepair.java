@@ -179,8 +179,8 @@ public class JRSRepair {
                     /* Compile the program and execute the test cases. */
                     compiled = this.testExecutor.runTests();
                 } catch (Exception e){
-                    System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
-                    System.err.println(e.getMessage());
+                    System.out.println("JRSRepair: Exception thrown during compilation/test execution.");
+                    System.out.println(e.getMessage());
                 }
                 finally { 
                     /* Roll back the current mutation. */
@@ -219,7 +219,8 @@ public class JRSRepair {
         } catch (Exception e) {
             /* For robustness, reset the program if this is the first generation and continue. */
         	if(generation == 1){
-                System.err.println("JRSRepair: Exception thrown during mutation recursion.");
+                System.out.println("JRSRepair: Exception thrown during mutation recursion.");
+                System.out.println(e.getMessage());
                 this.restoreOriginalProgram();
                 this.patches.clear();
         	} else {

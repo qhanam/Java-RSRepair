@@ -44,9 +44,6 @@ public class LineCoverage {
 			if(tokens.length == 4){
                 LCNode node = new LCNode(tokens[0], tokens[1], Integer.valueOf(tokens[2]));
                 map.put(node, Double.valueOf(tokens[3]));
-                if(tokens[2].equals("53")) { 
-                	tokens[2] = "Hello"; 
-                }
 			}
 			else{
 				reader.close();

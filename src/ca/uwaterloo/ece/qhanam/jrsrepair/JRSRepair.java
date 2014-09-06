@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.LinkedList;
 import java.util.Collection;
@@ -11,9 +12,7 @@ import java.util.Stack;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.io.PrintWriter;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -296,7 +295,7 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentModified()){
 				/* Since the document is tainted, we need to write it to disk. */
-				Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				JRSRepair.writeFile(new File(sourcePath), drwt.document.get());
 				drwt.untaintDocument();
 			}
 		}
@@ -313,7 +312,7 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentTainted()){
 				/* Since the document is tainted, we need to write it to disk. */
-				Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				JRSRepair.writeFile(new File(sourcePath), drwt.modifiedDocument.get());
 				drwt.untaintDocument();
 			}
 		}
@@ -362,12 +361,46 @@ public class JRSRepair {
 	private static HashMap<String, DocumentASTRewrite> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
 		HashMap<String, DocumentASTRewrite> map = new HashMap<String, DocumentASTRewrite>();
 		for(String sourceFile : sourceFilesArray){
-            byte[] encoded = Files.readAllBytes(Paths.get(sourceFile));
-            IDocument contents = new Document(new String(encoded));
+            String source = JRSRepair.readFile(new File(sourceFile));
+            IDocument contents = new Document(source);
             DocumentASTRewrite docrw = new DocumentASTRewrite(contents, null);
             map.put(sourceFile, docrw);
 		}
 		return map;
+	}
+	
+	/**
+	 * PrintWriter automatically truncates the file to zero if the file exists (or creates a new file if noe exists).
+	 * @param file
+	 * @param document
+	 * @throws Exception
+	 */
+	private static void writeFile(File file, String document) throws Exception{
+		PrintWriter writer = new PrintWriter(file);
+		writer.print(document);
+		writer.flush();
+		writer.close();
+	}
+	
+	/**
+	 * Reads a file and is 1.5 compatable.
+	 * @param pathname
+	 * @return
+	 * @throws Exception
+	 */
+	private static String readFile(File file) throws Exception {
+	    StringBuilder fileContents = new StringBuilder((int)file.length());
+	    Scanner scanner = new Scanner(file);
+	    String lineSeparator = System.getProperty("line.separator");
+
+	    try {
+	        while(scanner.hasNextLine()) {        
+	            fileContents.append(scanner.nextLine() + lineSeparator);
+	        }
+	        return fileContents.toString();
+	    } finally {
+	        scanner.close();
+	    }
 	}
 		
 }

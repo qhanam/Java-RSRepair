@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JRSRepair
-Bundle-SymbolicName: ca.uwaterloo.ece.qhanam.jrsrepair
+Bundle-SymbolicName: ca.uwaterloo.ece.qhanam.jrsrepair;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: ca.uwaterloo.ece.qhanam.jrsrepair.Activator
 Require-Bundle: org.eclipse.ui,

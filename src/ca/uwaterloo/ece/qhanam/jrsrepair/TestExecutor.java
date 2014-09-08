@@ -32,6 +32,9 @@ public class TestExecutor {
 	 * @throws Exception
 	 */
 	public int runTests() throws Exception{
+          /* TODO: Why is this needed to prevent using old source or class files? Find a better solution. We want to ensure any writes
+           * had time to get written to the disk. */
+          //Thread.sleep(2000);
 		
 		/* Attempt to compile the program. */
 		try{
@@ -81,8 +84,6 @@ public class TestExecutor {
               process.waitFor();
               
               /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-              /* TODO: Why is this needed to prevent using old source or class files? Find a better solution. */
-              Thread.sleep(1000);
               if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
 
             }catch(InterruptedException e){ 

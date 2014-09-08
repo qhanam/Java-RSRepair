@@ -296,7 +296,8 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentModified()){
 				/* Since the document is tainted, we need to write it to disk. */
-				Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				//Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				Utilities.writeToFile(new File(sourcePath), drwt.document.get());
 				drwt.untaintDocument();
 			}
 		}
@@ -313,7 +314,8 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentTainted()){
 				/* Since the document is tainted, we need to write it to disk. */
-				Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				//Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				Utilities.writeToFile(new File(sourcePath), drwt.modifiedDocument.get());
 				drwt.untaintDocument();
 			}
 		}
@@ -369,5 +371,18 @@ public class JRSRepair {
 		}
 		return map;
 	}
-		
+	
+    /**
+     * Temp method for debugging.
+	 * @throws Exception
+	 */
+	public static void logMutation(Mutation m) throws Exception{
+		try{
+        Files.write(Paths.get("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
+        		m.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+		} catch (Exception e){
+			System.out.println(e.getMessage());
+			throw e;
+		}
+	}
 }

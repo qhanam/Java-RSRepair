@@ -1,6 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.mutation;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
+import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair;
 import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
 
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -42,6 +43,7 @@ public abstract class Mutation {
 		if(mutated) throw new Exception("A mutate operation has allready been applied. Must call undo() before mutating again.");
 		this.docrwt.taintDocument();
 		this.concreteMutate();
+		JRSRepair.logMutation(this);
 	}
 
 	protected abstract void concreteMutate() throws Exception;
@@ -71,8 +73,8 @@ public abstract class Mutation {
 	public String toString(){
 		String s = "\nFaulty = " + this.faulty.sourceFile + "@" + this.faulty.statement.getStartPosition() + ": " + this.faulty.statement + "\n\n";
 		s += "Seed = ";
-		if(this.seed == null) s += "null";
-		else s += this.seed.sourceFile + "@" + this.seed.statement.getStartPosition() + ": " + this.seed.statement + "\n\n============================";
+		if(this.seed == null) s += "null" + ": " + "\n============================\n";
+		else s += this.seed.sourceFile + "@" + this.seed.statement.getStartPosition() + ": " + this.seed.statement + "\n============================\n";
 
 		return s;
 	}

@@ -56,7 +56,6 @@ public class JavaJDKCompiler {
 	    
 	    /* Write the class files to disk. */
 	    this.storeCompiled(this.classDirectory);
-	    System.out.println(output);
         return 0;
 	}
 	

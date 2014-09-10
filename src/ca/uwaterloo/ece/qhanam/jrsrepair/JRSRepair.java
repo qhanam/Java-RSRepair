@@ -183,7 +183,6 @@ public class JRSRepair {
                 /* Apply the mutation to the AST + Document. */
                 mutation.mutate();
                 compiled = this.compiler.compile();
-                //this.writeChangesToDisk();
                 
                 try{
                     /* Compile the program and execute the test cases. */

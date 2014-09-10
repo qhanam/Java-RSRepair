@@ -17,7 +17,7 @@ ca.uwaterloo.ece.qhanam.practice.lru:LRUList:5:1.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUList:50:1.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUList:51:1.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUList:52:1.0
-ca.uwaterloo.ece.qhanam.practice.lru:LRUList:53:1.0
+ca.uwaterloo.ece.qhanam.practice.lru:LRUList:53:10.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUList:55:1.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUCache:13:1.0
 ca.uwaterloo.ece.qhanam.practice.lru:LRUCache:14:1.0

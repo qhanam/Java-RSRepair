@@ -50,13 +50,13 @@ public class JavaJDKCompiler {
 	    mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
 
 	    /* Check the compilation went ok. */
-	    if(output.toString().matches("(?s).*\\d error\\s$")){
+	    if(output.toString().matches("(?s).*\\d errors?\\s$")){
 	    	return -1;
 	    }
 	    
 	    /* Write the class files to disk. */
 	    this.storeCompiled(this.classDirectory);
-        
+	    System.out.println(output);
         return 0;
 	}
 	

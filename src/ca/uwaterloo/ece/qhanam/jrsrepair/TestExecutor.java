@@ -37,32 +37,32 @@ public class TestExecutor {
           //Thread.sleep(2000);
 		
 		/* Attempt to compile the program. */
-		try{
-            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antCompileTarget);
-            builder.directory(this.baseDirectory);
-            Process process = builder.start();
-            
-            BufferedReader stdInput = new BufferedReader(new 
-                       InputStreamReader(process.getInputStream()));
-
-            /* Read the output from the command. */
-            String output = "";
-            String s = null;
-            while ((s = stdInput.readLine()) != null) {
-                output += s;
-            }
-            
-            try{
-              process.waitFor();
-              
-              /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
-              if(output.indexOf("BUILD SUCCESSFUL") < 0) return -1;
-
-            }catch(InterruptedException e){ 
-              System.out.println("Interrupted Exception during cvsCheckout.");
-              throw e;
-            }  	
-		} finally { }
+//		try{
+//            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antCompileTarget);
+//            builder.directory(this.baseDirectory);
+//            Process process = builder.start();
+//            
+//            BufferedReader stdInput = new BufferedReader(new 
+//                       InputStreamReader(process.getInputStream()));
+//
+//            /* Read the output from the command. */
+//            String output = "";
+//            String s = null;
+//            while ((s = stdInput.readLine()) != null) {
+//                output += s;
+//            }
+//            
+//            try{
+//              process.waitFor();
+//              
+//              /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
+//              if(output.indexOf("BUILD SUCCESSFUL") < 0) return -1;
+//
+//            }catch(InterruptedException e){ 
+//              System.out.println("Interrupted Exception during cvsCheckout.");
+//              throw e;
+//            }  	
+//		} finally { }
 	    
 	    /* The program has successfully compiled, so run the JUnit tests. */
 		try{
@@ -87,7 +87,7 @@ public class TestExecutor {
               if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
 
             }catch(InterruptedException e){ 
-              System.out.println("Interrupted Exception during cvsCheckout.");
+              System.out.println("Interrupted Exception during JUnit run.");
               throw e;
             }  	
 		} finally { }

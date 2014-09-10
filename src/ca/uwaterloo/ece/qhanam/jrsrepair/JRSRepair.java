@@ -28,6 +28,8 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
 	
+	private File sourceDirectory;
+
 	private String[] sourcePaths;
 	private File faultyCoverageFile;
 	private File seedCoverageFile;
@@ -98,6 +100,9 @@ public class JRSRepair {
 		/* Initialize the patch-building stack. */
 		this.patches = new Stack<String>();
 		this.patchDirectory = patchDirectory;
+		
+		/* Initialize the compiler with context. */
+		this.compiler.setContext(this.sourceFileContents, this.sourcePaths);
 		
 		this.currentMutation = null;
 		
@@ -179,12 +184,12 @@ public class JRSRepair {
                 
                 /* Apply the mutation to the AST + Document. */
                 mutation.mutate();
-                this.writeChangesToDisk();
+                compiled = this.compiler.compile();
+                //this.writeChangesToDisk();
                 
                 try{
                     /* Compile the program and execute the test cases. */
-
-                    compiled = this.testExecutor.runTests();
+                    if(compiled >= 0) compiled = this.testExecutor.runTests();
                 } catch (Exception e){
                     System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
                     System.err.println(e.getMessage());
@@ -196,7 +201,7 @@ public class JRSRepair {
                         mutation.undo(); 
                     } else {
                     	this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                        System.out.print(" - Compiled!");
+                        System.out.print(" - Compiled!\n");
                     }
                 }
 
@@ -304,41 +309,6 @@ public class JRSRepair {
 				/* Since the document is tainted, we need to write it to disk. */
 				//Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 				Utilities.writeToFile(new File(sourcePath), drwt.document.get());
-				drwt.untaintDocument();
-			}
-		}
-	}
-	
-	/**
-	 * Compile the modified files and write the new .class files to disk.
-	 * @throws Exception
-	 */
-	private void compileModified() throws Exception{
-		Set<String> sourcePaths = this.sourceFileContents.keySet();
-		for(String sourcePath : sourcePaths){
-			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
-			if(drwt.isDocumentTainted()){
-				/* Since the document is tainted, we need to write it to disk. */
-				//Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-				Utilities.writeToFile(new File(sourcePath), drwt.modifiedDocument.get());
-				drwt.untaintDocument();
-			}
-		}
-	}
-	
-	/**
-	 * Writes the source file changes back to disk. Only writes the documents that are marked
-	 * as tainted.
-	 * @throws Exception
-	 */
-	private void writeChangesToDisk() throws Exception{
-		Set<String> sourcePaths = this.sourceFileContents.keySet();
-		for(String sourcePath : sourcePaths){
-			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
-			if(drwt.isDocumentTainted()){
-				/* Since the document is tainted, we need to write it to disk. */
-				//Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-				Utilities.writeToFile(new File(sourcePath), drwt.modifiedDocument.get());
 				drwt.untaintDocument();
 			}
 		}

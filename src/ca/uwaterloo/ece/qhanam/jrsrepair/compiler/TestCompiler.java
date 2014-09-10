@@ -1,5 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.compiler;
 
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -22,7 +23,7 @@ public class TestCompiler {
 	        + "}";
 	private static final String MULTIPLE_CONTENT 
 	        = "public class " + CLASS + " {"
-	        + "    public static void main(String[] args) {"
+	        + "    ipublic static void main(String[] args) {"
 	        + "        System.out.println(\"Hello World!\");"
 	        + " 	   Test test = new Test();"
 	        + " 	   System.out.println(\"Result: \" + test.add(1, 2));"
@@ -35,7 +36,14 @@ public class TestCompiler {
 
 	public static void main(String[] args) throws Exception {
 		/* Note: CLASS should be fully qualified (i.e. include the package). */
-	    MemoryClassLoader mcl = new MemoryClassLoader(CLASS, MULTIPLE_CONTENT, CLASSPATH, null);
+		StringWriter output = new StringWriter();
+	    MemoryClassLoader mcl = new MemoryClassLoader(CLASS, MULTIPLE_CONTENT, CLASSPATH, output);
+	    
+	    /* Check the compilation went ok. */
+	    if(output.toString().matches("(?s).*\\d error\\s$")){
+	    	System.out.println("Did not compile:\n" + output.toString());
+	    	return;
+	    }
 	    
 	    /* Get the bytes from the class. */
 	    //byte[] classBytes = mcl.getClassBytes(CLASS);

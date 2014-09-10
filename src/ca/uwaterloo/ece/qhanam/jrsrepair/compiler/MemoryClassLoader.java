@@ -31,10 +31,10 @@ public class MemoryClassLoader extends ClassLoader {
         
         List<String> optionList = new ArrayList<String>();
         // set compiler's classpath to be same as the runtime's
-        optionList.addAll(Arrays.asList("-classpath",System.getProperty(classpath)));
+        optionList.addAll(Arrays.asList("-classpath", classpath));
 
         //this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
-        this.compiler.getTask(null, this.manager, null, null, null, list).call();
+        this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
     }
     
     /**
@@ -45,11 +45,7 @@ public class MemoryClassLoader extends ClassLoader {
     	List<Output> classFiles = new LinkedList<Output>();
 
     	for(String file : this.manager.map.keySet()){
-    		Output mc = this.manager.map.get(file);
-    		System.out.println("Key = " + file);
-    		System.out.println("toString = " + mc.toString());
-    		System.out.println("getName = " + mc.getName());
-    		classFiles.add(mc);
+    		classFiles.add(this.manager.map.get(file));
     	}
     	
     	return classFiles;
@@ -69,7 +65,8 @@ public class MemoryClassLoader extends ClassLoader {
     	return null;
     }
 
-    @Override
+	@Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Class findClass(String name) throws ClassNotFoundException {
         synchronized (this.manager) {
             Output mc = this.manager.map.remove(name);

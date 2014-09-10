@@ -74,7 +74,7 @@ public class MutationASTRequestor extends FileASTRequestor {
 		for(AbstractTypeDeclaration type : types){
 			/* TODO: We need to extract the name of the file only. The compiler should take care of
 			 * multiple types in one file right? */
-			System.out.println(type.getName());
+			//System.out.println(type.getName());
 		}
 
         /* Store the statements that are covered by test cases. */

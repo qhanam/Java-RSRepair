@@ -15,6 +15,7 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
  * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
  */
 public class JavaJDKCompiler {
+	private MemoryClassLoader mcl;
 	private Map<String, DocumentASTRewrite> sourceFileContents;
 	private String[] sourcePaths;
 	private String classDirectory;
@@ -23,6 +24,7 @@ public class JavaJDKCompiler {
 	public JavaJDKCompiler(String classDirectory, String classpath){
 		this.classDirectory = classDirectory;
 		this.classpath = classpath;
+		this.mcl = null;
 	}
 	
 	public void setContext(Map<String, DocumentASTRewrite> sourceFileContents, String[] sourcePaths){
@@ -45,7 +47,7 @@ public class JavaJDKCompiler {
 		Map<String, String> sourceMap = this.buildSourceMap();
 		
 		/* Compile the Java file. */
-	    MemoryClassLoader mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
+	    mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
 
 	    /* Check the compilation went ok. */
 	    if(output.toString().matches("(?s).*\\d error\\s$")){
@@ -53,30 +55,34 @@ public class JavaJDKCompiler {
 	    }
 	    
 	    /* Write the class files to disk. */
-	    List<Output> classFiles = mcl.getAllClasses();
-	    
-	    /* Write the class to disk. */
-	    try{
-	    for(Output classFile : classFiles){
-            Files.write(Paths.get(this.classDirectory, classFile.getName()), 
-            		classFile.toByteArray(), StandardOpenOption.WRITE, 
-            		StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-	    }
-	    }catch (Exception e){
-	    	System.out.println(e.getMessage());
-	    }
+	    this.storeCompiled(this.classDirectory);
         
         return 0;
 	}
 	
 	/**
-	 * Returns the path to the class directory.
-	 * @return
+	 * Stores the class files in the given directory.
+	 * @param directory Base directory for .class files.
 	 */
-	public String getClassDirectory(){
-		return this.classDirectory;
+	public void storeCompiled(String directory){
+	    /* Write the class files to disk. */
+	    List<Output> classFiles = mcl.getAllClasses();
+	    
+	    /* Write the class to disk. */
+	    try{
+            for(Output classFile : classFiles){
+                File f = new File(directory, classFile.getName());
+                f.getParentFile().mkdirs();
+                Files.write(Paths.get(directory, classFile.getName()), 
+                        classFile.toByteArray(), StandardOpenOption.WRITE, 
+                        StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE,
+                        StandardOpenOption.SYNC);
+            }
+	    }catch (Exception e){
+	    	System.out.println(e.getMessage());
+	    }
 	}
-
+	
 	/**
 	 * Writes the source file changes back to disk. Only writes the documents that are marked
 	 * as tainted.

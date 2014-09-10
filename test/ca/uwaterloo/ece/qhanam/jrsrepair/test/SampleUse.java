@@ -22,7 +22,7 @@ public class SampleUse {
 	
 	public static final long RANDOM_SEED = 3;
 	
-	public static final File PATCH_DIRECTORY = new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build/patches");
+	public static final File BUILD_DIRECTORY = new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build");
 	
 	public static final String CLASS_DIRECTORY = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build/classes";
 	public static final String CLASSPATH = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build/classes";
@@ -32,7 +32,7 @@ public class SampleUse {
 		JavaJDKCompiler compiler = new JavaJDKCompiler(CLASS_DIRECTORY, CLASSPATH);
 		JRSRepair repair = new JRSRepair(SOURCE_DIRECTORY, new File(FAULTY_COVERAGE), new File(SEED_COVERAGE), 
 										 MUTATION_CANDIDATES, MUTATION_GENERATIONS, MUTATION_ATTEMPTS, RANDOM_SEED, 
-										 PATCH_DIRECTORY, compiler, testExecutor);
+										 BUILD_DIRECTORY, compiler, testExecutor);
 
 		repair.buildASTs();
 		repair.repair();

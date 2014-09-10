@@ -28,8 +28,6 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
 	
-	private File sourceDirectory;
-
 	private String[] sourcePaths;
 	private File faultyCoverageFile;
 	private File seedCoverageFile;
@@ -55,7 +53,7 @@ public class JRSRepair {
 	private TestExecutor testExecutor;
 	
 	private Stack<String> patches;
-	private File patchDirectory;
+	private File buildDirectory;
 	
 	private Integer currentMutation; // TODO: Fix this hack.
 	
@@ -66,7 +64,7 @@ public class JRSRepair {
 	 */
 	public JRSRepair(String[] sourcePaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
-					 long randomSeed, File patchDirectory, JavaJDKCompiler compiler, 
+					 long randomSeed, File buildDirectory, JavaJDKCompiler compiler, 
 					 TestExecutor testExecutor) throws Exception {
 
 		this.scope = new HashMap<String, HashSet<String>>();
@@ -99,7 +97,7 @@ public class JRSRepair {
 		
 		/* Initialize the patch-building stack. */
 		this.patches = new Stack<String>();
-		this.patchDirectory = patchDirectory;
+		this.buildDirectory = buildDirectory;
 		
 		/* Initialize the compiler with context. */
 		this.compiler.setContext(this.sourceFileContents, this.sourcePaths);
@@ -211,7 +209,10 @@ public class JRSRepair {
             
             this.currentMutation = null;
             
-            if(compiled > 0) System.out.print(" Passed!\n");
+            if(compiled > 0) {
+                this.logSuccesfullPatch(candidate, generation);
+            	System.out.print(" Passed!\n");
+            }
             else if(compiled == 0) System.out.print("\n");
         
             /* Recurse to the next level of mutations. */
@@ -220,11 +221,6 @@ public class JRSRepair {
             }
 
             if(compiled >= 0) {
-            	if(compiled > 0){
-            		System.out.print(" Passed!\n");
-            		this.logSuccesfullPatch(candidate, generation);
-            	}
-
             	this.patches.pop();
             	mutation.undo();
             }
@@ -248,9 +244,13 @@ public class JRSRepair {
 	private void logSuccesfullPatch(int candidate, int generation){
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 		Date date = new Date();
-		File file = new File(this.patchDirectory, "Candidate" + candidate + "_Generation" + generation + "_" + dateFormat.format(date));
+		File file = new File(this.buildDirectory + "/patches", "Candidate" + candidate + "_Generation" + generation + "_" + dateFormat.format(date));
 		BufferedWriter out = null;
 		
+		/* Store the .class files for the program so we can verify. */
+		this.compiler.storeCompiled(this.buildDirectory + "/classes_Candidate" + candidate + "_Generation" + generation + "_" + dateFormat.format(date));
+		
+		/* Log the mutation events that produced the patch. */
         try{
             file.createNewFile();
             out = new BufferedWriter(new FileWriter(file));

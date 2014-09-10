@@ -11,9 +11,9 @@ public class SampleUse {
 	public static final String FAULTY_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/faulty.cov";
 	public static final String SEED_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/seed.cov";
 	
-	public static final int MUTATION_CANDIDATES = 3; 
+	public static final int MUTATION_CANDIDATES = 40; 
 	public static final int MUTATION_GENERATIONS = 10;
-	public static final int MUTATION_ATTEMPTS = 10;
+	public static final int MUTATION_ATTEMPTS = 100;
 	
 	public static final String ANT_BASE_DIR = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/";
 	public static final String ANT_PATH = "/usr/bin/ant";

@@ -201,7 +201,7 @@ public class JRSRepair {
                         mutation.undo(); 
                     } else {
                     	this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                        System.out.print(" - Compiled!\n");
+                        System.out.print(" - Compiled!");
                     }
                 }
 
@@ -210,6 +210,9 @@ public class JRSRepair {
             } while(compiled < 0 && attemptCounter < this.mutationAttempts);
             
             this.currentMutation = null;
+            
+            if(compiled > 0) System.out.print(" Passed!\n");
+            else if(compiled == 0) System.out.print("\n");
         
             /* Recurse to the next level of mutations. */
             if(generation < this.mutationGenerations){ 
@@ -221,12 +224,10 @@ public class JRSRepair {
             		System.out.print(" Passed!\n");
             		this.logSuccesfullPatch(candidate, generation);
             	}
-            	else System.out.print("\n");
 
             	this.patches.pop();
             	mutation.undo();
             }
-            else System.out.print("\n");
 
         } catch (Exception e) {
             /* For robustness, reset the program if this is the first generation and continue. */

@@ -23,6 +23,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
+import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
@@ -48,6 +49,7 @@ public class JRSRepair {
 	
 	private Random random;
 	
+	private JavaJDKCompiler compiler;
 	private TestExecutor testExecutor;
 	
 	private Stack<String> patches;
@@ -62,7 +64,9 @@ public class JRSRepair {
 	 */
 	public JRSRepair(String[] sourcePaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
-					 long randomSeed, File patchDirectory, TestExecutor testExecutor) throws Exception {
+					 long randomSeed, File patchDirectory, JavaJDKCompiler compiler, 
+					 TestExecutor testExecutor) throws Exception {
+
 		this.scope = new HashMap<String, HashSet<String>>();
 		
 		this.random = new Random(randomSeed);
@@ -78,6 +82,7 @@ public class JRSRepair {
 		this.mutationGenerations = mutationGenerations;
 		this.mutationAttempts = mutationAttempts;
 		
+		this.compiler = compiler;
 		this.testExecutor = testExecutor;
 
 		/* Get the list of source files for us to mutate. */
@@ -178,6 +183,7 @@ public class JRSRepair {
                 
                 try{
                     /* Compile the program and execute the test cases. */
+
                     compiled = this.testExecutor.runTests();
                 } catch (Exception e){
                     System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
@@ -298,6 +304,23 @@ public class JRSRepair {
 				/* Since the document is tainted, we need to write it to disk. */
 				//Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
 				Utilities.writeToFile(new File(sourcePath), drwt.document.get());
+				drwt.untaintDocument();
+			}
+		}
+	}
+	
+	/**
+	 * Compile the modified files and write the new .class files to disk.
+	 * @throws Exception
+	 */
+	private void compileModified() throws Exception{
+		Set<String> sourcePaths = this.sourceFileContents.keySet();
+		for(String sourcePath : sourcePaths){
+			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
+			if(drwt.isDocumentTainted()){
+				/* Since the document is tainted, we need to write it to disk. */
+				//Files.write(Paths.get(sourcePath), drwt.modifiedDocument.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+				Utilities.writeToFile(new File(sourcePath), drwt.modifiedDocument.get());
 				drwt.untaintDocument();
 			}
 		}

@@ -9,6 +9,9 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject.Kind;
 
+/**
+ * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
+ */
 public class MemoryFileManager extends ForwardingJavaFileManager<JavaFileManager> {
    public final Map<String, Output> map = new HashMap<String, Output>();
 
@@ -17,8 +20,7 @@ public class MemoryFileManager extends ForwardingJavaFileManager<JavaFileManager
     }
 
     @Override
-    public Output getJavaFileForOutput
-            (Location location, String name, Kind kind, FileObject source) {
+    public Output getJavaFileForOutput (Location location, String name, Kind kind, FileObject source) {
         Output mc = new Output(name, kind);
         this.map.put(name, mc);
         return mc;

@@ -2,8 +2,11 @@ package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Stack;
 
+import org.eclipse.jdt.core.IClassFile;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
@@ -59,6 +62,21 @@ public class MutationASTRequestor extends FileASTRequestor {
 		AST ast = cu.getAST();
 		this.sourceFileContents.get(sourceFilePath).rewriter = ASTRewrite.create(ast);
 		
+		/* TODO: What we really need here is the file name of the class file, not the individual
+		 * types declared by the class file. Just extract the file name from the file path. We
+		 * will build the class file path from: 1. the class file base directory 2. the package
+		 * 3. the class file name. But doesn't javac compile each type into its own .class file?
+		 * 
+		 * Yes.
+		 */
+		
+		List<AbstractTypeDeclaration> types = cu.types();
+		for(AbstractTypeDeclaration type : types){
+			/* TODO: We need to extract the name of the file only. The compiler should take care of
+			 * multiple types in one file right? */
+			System.out.println(type.getName());
+		}
+
         /* Store the statements that are covered by test cases. */
         StatementASTVisitor statementASTVisitor = new StatementASTVisitor(sourceFilePath);
         cu.accept(statementASTVisitor);

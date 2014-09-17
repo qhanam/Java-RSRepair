@@ -352,7 +352,7 @@ public class JRSRepair {
 	private static HashMap<String, DocumentASTRewrite> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
 		HashMap<String, DocumentASTRewrite> map = new HashMap<String, DocumentASTRewrite>();
 		for(String sourceFile : sourceFilesArray){
-            byte[] encoded = Files.readAllBytes(Paths.get(sourceFile));
+            byte[] encoded = Utilities.readFromFileJava6(new File(sourceFile));
             IDocument contents = new Document(new String(encoded));
             DocumentASTRewrite docrw = new DocumentASTRewrite(contents, null);
             map.put(sourceFile, docrw);

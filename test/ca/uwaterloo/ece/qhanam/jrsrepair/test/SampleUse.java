@@ -1,6 +1,9 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.test;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.util.LinkedList;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.*;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
@@ -28,13 +31,78 @@ public class SampleUse {
 	public static final String CLASSPATH = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build/classes";
 
 	public static void main(String[] args) throws Exception {
-		TestExecutor testExecutor = new TestExecutor(new File(ANT_BASE_DIR), ANT_PATH, ANT_COMPILE_TARGET, ANT_TEST_TARGET);
-		JavaJDKCompiler compiler = new JavaJDKCompiler(CLASS_DIRECTORY, CLASSPATH);
-		JRSRepair repair = new JRSRepair(SOURCE_DIRECTORY, new File(FAULTY_COVERAGE), new File(SEED_COVERAGE), 
-										 MUTATION_CANDIDATES, MUTATION_GENERATIONS, MUTATION_ATTEMPTS, RANDOM_SEED, 
-										 BUILD_DIRECTORY, compiler, testExecutor);
+		if(args.length > 0){
+			String[] sourceDirectories = readSourceFiles(new File(args[0]));
+			JRSRepair repair = readConfigFile(new File(args[1]), sourceDirectories);
+            repair.buildASTs();
+            repair.repair();
+		}
+		else{
+            TestExecutor testExecutor = new TestExecutor(new File(ANT_BASE_DIR), ANT_PATH, ANT_COMPILE_TARGET, ANT_TEST_TARGET);
+            JavaJDKCompiler compiler = new JavaJDKCompiler(CLASS_DIRECTORY, CLASSPATH);
+            JRSRepair repair = new JRSRepair(SOURCE_DIRECTORY, new File(FAULTY_COVERAGE), new File(SEED_COVERAGE), 
+                                             MUTATION_CANDIDATES, MUTATION_GENERATIONS, MUTATION_ATTEMPTS, RANDOM_SEED, 
+                                             BUILD_DIRECTORY, compiler, testExecutor);
+            repair.buildASTs();
+            repair.repair();
+		}
+		
+	}
+	
+	public static String[] readSourceFiles(File file) throws Exception{
+		String[] sourceDirectoryArray;
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		LinkedList<String> sourceDirectories = new LinkedList<String>();
 
-		repair.buildASTs();
-		repair.repair();
+		for(String line = reader.readLine(); line != null; line = reader.readLine()){
+			sourceDirectories.add(line.trim());
+		}
+		
+		reader.close();
+	
+		sourceDirectoryArray = new String[sourceDirectories.size()];
+		int i = 0;
+		for(String sourceDirectory : sourceDirectories){
+			sourceDirectoryArray[i] = sourceDirectory;
+			i++;
+		}
+		
+		return sourceDirectoryArray;
+	}
+	
+	public static JRSRepair readConfigFile(File file, String[] sourceDirectories) throws Exception{
+        TestExecutor testExecutor;
+        JavaJDKCompiler compiler;
+		JRSRepair repair;
+
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+
+        File faultyCoverage = new File(reader.readLine().trim());
+        File seedCoverage = new File(reader.readLine().trim());
+	
+        int mutationCandidates = Integer.parseInt(reader.readLine().trim());
+        int mutationGenerations = Integer.parseInt(reader.readLine().trim());
+        int mutationAttempts = Integer.parseInt(reader.readLine().trim()); 
+
+        File antBaseDirectory = new File(reader.readLine().trim());
+        String antPath = reader.readLine().trim();
+        String antCompileTarget = reader.readLine().trim();
+        String antTestTarget = reader.readLine().trim();
+
+        long randomSeed = Integer.parseInt(reader.readLine().trim());
+
+    	File buildDirectory = new File(reader.readLine());
+    	String classDirectory = reader.readLine();
+    	String classPath = reader.readLine();
+
+		reader.close();
+		
+        testExecutor = new TestExecutor(antBaseDirectory, antPath, antCompileTarget, antTestTarget);
+        compiler = new JavaJDKCompiler(classDirectory, classPath);
+        repair = new JRSRepair(sourceDirectories, faultyCoverage, seedCoverage, 
+                                 mutationCandidates, mutationGenerations, mutationAttempts, randomSeed, 
+                                 buildDirectory, compiler, testExecutor);
+
+		return repair;
 	}
 }

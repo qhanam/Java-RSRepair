@@ -11,9 +11,6 @@ import java.util.Stack;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -270,7 +267,6 @@ public class JRSRepair {
 	private Mutation getRandomMutation(){
 		SourceStatement faultyStatement;
 		Mutation mutation;
-		//int index = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
 		if(this.currentMutation == null) this.currentMutation = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
 		
 		switch(this.currentMutation){
@@ -307,8 +303,7 @@ public class JRSRepair {
 			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
 			if(drwt.isDocumentModified()){
 				/* Since the document is tainted, we need to write it to disk. */
-				//Files.write(Paths.get(sourcePath), drwt.document.get().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-				Utilities.writeToFile(new File(sourcePath), drwt.document.get());
+				Utilities.writeToFileJava6(new File(sourcePath), drwt.document.get().getBytes());
 				drwt.untaintDocument();
 			}
 		}
@@ -371,8 +366,8 @@ public class JRSRepair {
 	 */
 	public static void logMutation(Mutation m) throws Exception{
 		try{
-        Files.write(Paths.get("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
-        		m.toString().getBytes(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+			Utilities.writeToFileJava6(new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
+									   m.toString().getBytes());
 		} catch (Exception e){
 			System.out.println(e.getMessage());
 			throw e;

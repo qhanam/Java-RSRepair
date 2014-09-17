@@ -2,14 +2,12 @@ package ca.uwaterloo.ece.qhanam.jrsrepair.compiler;
 
 import java.io.File;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
+import ca.uwaterloo.ece.qhanam.jrsrepair.Utilities;
 
 /**
  * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
@@ -51,7 +49,7 @@ public class JavaJDKCompiler {
 
 	    /* Check the compilation went ok. */
 	    if(output.toString().matches("(?s).*\\d errors?\\s$")){
-	    	return -1;
+	    	return 1;
 	    }
 	    
 	    /* Write the class files to disk. */
@@ -72,10 +70,7 @@ public class JavaJDKCompiler {
             for(Output classFile : classFiles){
                 File f = new File(directory, classFile.getName());
                 f.getParentFile().mkdirs();
-                Files.write(Paths.get(directory, classFile.getName()), 
-                        classFile.toByteArray(), StandardOpenOption.WRITE, 
-                        StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE,
-                        StandardOpenOption.SYNC);
+                Utilities.writeToFileJava6(new File(directory, classFile.getName()), classFile.toByteArray());
             }
 	    }catch (Exception e){
 	    	System.out.println(e.getMessage());

@@ -147,7 +147,6 @@ public class JRSRepair {
 			}
 		}
 		finally {
-            this.restoreOriginalProgram(); // Leave the program in its original state (hopefully)
             System.out.println("Finished!");
 		}
 	}
@@ -185,7 +184,7 @@ public class JRSRepair {
                     /* Compile the program and execute the test cases. */
                     if(compiled >= 0) compiled = this.testExecutor.runTests();
                 } catch (Exception e){
-                    System.err.println("JRSRepair: Exception thrown during compilation/test execution.");
+                    System.err.println("JRSRepair: Exception thrown during test execution.");
                     System.err.println(e.getMessage());
                 }
                 finally { 
@@ -225,7 +224,6 @@ public class JRSRepair {
             /* For robustness, reset the program if this is the first generation and continue. */
         	if(generation == 1){
                 System.err.println("JRSRepair: Exception thrown during mutation recursion.");
-                this.restoreOriginalProgram();
                 this.patches.clear();
         	} else {
         		throw e;
@@ -292,22 +290,6 @@ public class JRSRepair {
 		
 		return mutation;
 	}
-
-    /**
-	 * Restores the program's original state.
-	 * @throws Exception
-	 */
-	private void restoreOriginalProgram() throws Exception{
-		Set<String> sourcePaths = this.sourceFileContents.keySet();
-		for(String sourcePath : sourcePaths){
-			DocumentASTRewrite drwt = this.sourceFileContents.get(sourcePath);
-			if(drwt.isDocumentModified()){
-				/* Since the document is tainted, we need to write it to disk. */
-				Utilities.writeToFileJava6(new File(sourcePath), drwt.document.get().getBytes());
-				drwt.untaintDocument();
-			}
-		}
-	}
 	
 	/**
 	 * Generates a list of java source files given a directory, or returns the
@@ -352,7 +334,7 @@ public class JRSRepair {
 	private static HashMap<String, DocumentASTRewrite> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
 		HashMap<String, DocumentASTRewrite> map = new HashMap<String, DocumentASTRewrite>();
 		for(String sourceFile : sourceFilesArray){
-            byte[] encoded = Utilities.readFromFileJava6(new File(sourceFile));
+            byte[] encoded = Utilities.readFromFile(new File(sourceFile));
             IDocument contents = new Document(new String(encoded));
             DocumentASTRewrite docrw = new DocumentASTRewrite(contents, null);
             map.put(sourceFile, docrw);
@@ -366,7 +348,7 @@ public class JRSRepair {
 	 */
 	public static void logMutation(Mutation m) throws Exception{
 		try{
-			Utilities.writeToFileJava6(new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
+			Utilities.writeToFileAppend(new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
 									   m.toString().getBytes());
 		} catch (Exception e){
 			System.out.println(e.getMessage());

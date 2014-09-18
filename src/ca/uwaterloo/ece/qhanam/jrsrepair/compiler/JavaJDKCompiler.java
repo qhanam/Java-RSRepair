@@ -49,7 +49,7 @@ public class JavaJDKCompiler {
 
 	    /* Check the compilation went ok. */
 	    if(output.toString().matches("(?s).*\\d errors?\\s$")){
-	    	return 1;
+	    	return -1;
 	    }
 	    
 	    /* Write the class files to disk. */
@@ -70,7 +70,7 @@ public class JavaJDKCompiler {
             for(Output classFile : classFiles){
                 File f = new File(directory, classFile.getName());
                 f.getParentFile().mkdirs();
-                Utilities.writeToFileJava6(new File(directory, classFile.getName()), classFile.toByteArray());
+                Utilities.writeToFile(new File(directory, classFile.getName()), classFile.toByteArray());
             }
 	    }catch (Exception e){
 	    	System.out.println(e.getMessage());

@@ -43,7 +43,7 @@ public abstract class Mutation {
 		if(mutated) throw new Exception("A mutate operation has allready been applied. Must call undo() before mutating again.");
 		this.docrwt.taintDocument();
 		this.concreteMutate();
-		JRSRepair.logMutation(this);
+//		JRSRepair.logMutation(this);
 	}
 
 	protected abstract void concreteMutate() throws Exception;

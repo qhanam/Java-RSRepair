@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.Stack;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -377,10 +377,12 @@ public class JRSRepair {
 	 * @throws Exception
 	 */
 	private static void writeFile(File file, String document) throws Exception{
-		PrintWriter writer = new PrintWriter(file);
-		writer.print(document);
-		writer.flush();
-		writer.close();
+		FileOutputStream fos = new FileOutputStream(file);
+		
+		fos.write(document.getBytes());
+		fos.flush();
+		fos.getFD().sync();
+		fos.close();
 	}
 	
 	/**

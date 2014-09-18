@@ -3,7 +3,6 @@ package ca.uwaterloo.ece.qhanam.jrsrepair.test;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.*;

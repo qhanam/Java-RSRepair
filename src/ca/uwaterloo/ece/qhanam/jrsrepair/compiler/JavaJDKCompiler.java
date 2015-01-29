@@ -48,7 +48,8 @@ public class JavaJDKCompiler {
 	    mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
 
 	    /* Check the compilation went ok. */
-	    if(output.toString().matches("(?s).*\\d errors?\\s$")){
+	    //System.out.println(output.toString());
+	    if(output.toString().matches("(?s).*\\d+ errors?.*")){
 	    	return -1;
 	    }
 	    

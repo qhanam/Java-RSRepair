@@ -177,6 +177,7 @@ public class JRSRepair {
                 
                 /* Apply the mutation to the AST + Document. */
                 mutation.mutate();
+                this.logMutation(mutation);
                 compiled = this.compiler.compile();
                 
                 try{
@@ -343,17 +344,17 @@ public class JRSRepair {
 		return map;
 	}
 	
-//    /**
-//     * Temp method for debugging.
-//	 * @throws Exception
-//	 */
-//	public static void logMutation(Mutation m) throws Exception{
-//		try{
-//			Utilities.writeToFileAppend(new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/log"), 
-//									   m.toString().getBytes());
-//		} catch (Exception e){
-//			System.out.println(e.getMessage());
-//			throw e;
-//		}
-//	}
+    /**
+     * Temp method for debugging.
+	 * @throws Exception
+	 */
+	public void logMutation(Mutation m) throws Exception{
+		try{
+			Utilities.writeToFileAppend(new File(this.buildDirectory + "/log"), 
+									   m.toString().getBytes());
+		} catch (Exception e){
+			System.out.println(e.getMessage());
+			throw e;
+		}
+	}
 }

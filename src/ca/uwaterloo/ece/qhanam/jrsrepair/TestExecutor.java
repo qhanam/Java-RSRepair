@@ -27,71 +27,39 @@ public class TestExecutor {
 	}
 	
 	/**
-	 * Run the script (e.g., ant) to compile the program and run the JUnit test cases.
+	 * Run the script (e.g., ant) to run the JUnit test cases.
 	 * @return -1 = failed to compile, 0 = compiled, 1 = passed all test cases
 	 * @throws Exception
 	 */
 	public int runTests() throws Exception{
-          /* TODO: Why is this needed to prevent using old source or class files? Find a better solution. We want to ensure any writes
-           * had time to get written to the disk. */
-          //Thread.sleep(2000);
-		
-		/* Attempt to compile the program. */
-//		try{
-//            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antCompileTarget);
-//            builder.directory(this.baseDirectory);
-//            Process process = builder.start();
-//            
-//            BufferedReader stdInput = new BufferedReader(new 
-//                       InputStreamReader(process.getInputStream()));
-//
-//            /* Read the output from the command. */
-//            String output = "";
-//            String s = null;
-//            while ((s = stdInput.readLine()) != null) {
-//                output += s;
-//            }
-//            
-//            try{
-//              process.waitFor();
-//              
-//              /* If the script output contains "BUILD SUCCESSFUL", then the program has compiled. */
-//              if(output.indexOf("BUILD SUCCESSFUL") < 0) return -1;
-//
-//            }catch(InterruptedException e){ 
-//              System.out.println("Interrupted Exception during cvsCheckout.");
-//              throw e;
-//            }  	
-//		} finally { }
 	    
 	    /* The program has successfully compiled, so run the JUnit tests. */
-		try{
-            ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
-            builder.directory(this.baseDirectory);
-            Process process = builder.start();
-            
-            BufferedReader stdInput = new BufferedReader(new 
-                       InputStreamReader(process.getInputStream()));
+        ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
+        builder.directory(this.baseDirectory);
+        Process process = builder.start();
+        
+        BufferedReader stdInput = new BufferedReader(new 
+                   InputStreamReader(process.getInputStream()));
 
-            /* Read the output from the command. */
-            String output = "";
-            String s = null;
-            while ((s = stdInput.readLine()) != null) {
-                output += s;
-            }
-            
-            try{
-              process.waitFor();
-              
-              /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-              if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
+        /* Read the output from the command. */
+        String output = "";
+        String s = null;
+        while ((s = stdInput.readLine()) != null) {
+            output += s;
+        }
+        
+        try{
+          process.waitFor();
+          
+          /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
+          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
 
-            }catch(InterruptedException e){ 
-              System.out.println("Interrupted Exception during JUnit run.");
-              throw e;
-            }  	
-		} finally { }
+        }catch(InterruptedException e){ 
+          System.out.println("Interrupted Exception during JUnit run.");
+          throw e;
+        }
 
+        /* The program compiled, but failed one or more test cases. */
         return 0;
 	}
 }

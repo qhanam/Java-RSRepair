@@ -19,11 +19,11 @@ public class MemoryClassLoader extends ClassLoader {
     private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private final MemoryFileManager manager = new MemoryFileManager(this.compiler);
 
-    public MemoryClassLoader(String classname, String filecontent, String classpath, Writer output) {
+    public MemoryClassLoader(String classname, String filecontent, String[] classpath, Writer output) {
         this(Collections.singletonMap(classname, filecontent), classpath, output);
     }
 
-    public MemoryClassLoader(Map<String, String> map, String classpath, Writer output) {
+    public MemoryClassLoader(Map<String, String> map, String[] classpath, Writer output) {
         List<Source> list = new ArrayList<Source>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             list.add(new Source(entry.getKey(), Kind.SOURCE, entry.getValue()));
@@ -31,9 +31,9 @@ public class MemoryClassLoader extends ClassLoader {
         
         List<String> optionList = new ArrayList<String>();
         // set compiler's classpath to be same as the runtime's
-        optionList.addAll(Arrays.asList("-classpath", classpath));
+        optionList.add("-classpath");
+        optionList.addAll(Arrays.asList(classpath));
 
-        //this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
         this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
     }
     

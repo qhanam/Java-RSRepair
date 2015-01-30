@@ -24,9 +24,11 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
 	
-	private String[] sourcePaths;
+	private String[] sourcepaths;
 	private File faultyCoverageFile;
 	private File seedCoverageFile;
+
+	private String[] classpaths;
 
 	private String[] sourceFilesArray;
     private HashMap<String, DocumentASTRewrite> sourceFileContents;
@@ -56,9 +58,9 @@ public class JRSRepair {
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
 	 * of the program we are mutating.
-	 * @param sourcePaths The path to the source folder of the program we are mutating.
+	 * @param sourcepaths The path to the source folder of the program we are mutating.
 	 */
-	public JRSRepair(String[] sourcePaths, File faultyCoverageFile, File seedCoverageFile, 
+	public JRSRepair(String[] sourcepaths, String[] classpaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
 					 long randomSeed, File buildDirectory, JavaJDKCompiler compiler, 
 					 TestExecutor testExecutor) throws Exception {
@@ -70,7 +72,8 @@ public class JRSRepair {
 		this.faultyStatements = new Statements(this.scope, this.random.nextLong());
 		this.seedStatements = new Statements(this.scope, this.random.nextLong());
 
-		this.sourcePaths = sourcePaths;
+		this.classpaths = classpaths;
+		this.sourcepaths = sourcepaths;
 		this.faultyCoverageFile = faultyCoverageFile;
 		this.seedCoverageFile = seedCoverageFile;
 		
@@ -82,7 +85,7 @@ public class JRSRepair {
 		this.testExecutor = testExecutor;
 
 		/* Get the list of source files for us to mutate. */
-		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcePaths);
+		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcepaths);
 		
 		/* Load the source code from the .java files. */
 		this.sourceFileContents = JRSRepair.buildSourceDocumentMap(sourceFilesArray);
@@ -96,7 +99,7 @@ public class JRSRepair {
 		this.buildDirectory = buildDirectory;
 		
 		/* Initialize the compiler with context. */
-		this.compiler.setContext(this.sourceFileContents, this.sourcePaths);
+		this.compiler.setContext(this.sourceFileContents, this.sourcepaths);
 		
 		this.currentMutation = null;
 		
@@ -116,8 +119,8 @@ public class JRSRepair {
 		 * String[] sourcepathEntries, 
 		 * String[] encodings,
 		 * boolean includeRunningVMBootclasspath) */
-		parser.setEnvironment(new String[] {}, sourceFilesArray, null, false);
-		parser.setResolveBindings(false); // Throws an error when set to 'true' for some reason.
+		parser.setEnvironment(this.classpaths, this.sourcepaths, null, true); 
+		parser.setResolveBindings(true); // ISSUE: Throws an error when set to 'true' for some reason. SOLVED: was passing list of source files, not the source directory.
 		
 		/* Set up the AST handler. We need to create LineCoverage and Statements classes to store 
 		 * and filter the statements from the ASTs. */
@@ -153,7 +156,7 @@ public class JRSRepair {
 	/**
 	 * The main method for trying a mutation. It performs all the operations needed 
 	 * to mutate, compile and test the program. It is recursive and will therefore
-	 * attempts multiple mutations at a time before rolling back their changes. 
+	 * attempt multiple mutations at a time before rolling back their changes. 
 	 * @param generation The number of mutations that have already been applied.
 	 */
 	private void mutationIteration(int candidate, int generation) throws Exception{

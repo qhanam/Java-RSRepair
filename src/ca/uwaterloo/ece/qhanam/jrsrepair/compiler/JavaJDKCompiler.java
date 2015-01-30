@@ -17,9 +17,9 @@ public class JavaJDKCompiler {
 	private Map<String, DocumentASTRewrite> sourceFileContents;
 	private String[] sourcePaths;
 	private String classDirectory;
-	private String classpath;
+	private String[] classpath;
 	
-	public JavaJDKCompiler(String classDirectory, String classpath){
+	public JavaJDKCompiler(String classDirectory, String[] classpath){
 		this.classDirectory = classDirectory;
 		this.classpath = classpath;
 		this.mcl = null;

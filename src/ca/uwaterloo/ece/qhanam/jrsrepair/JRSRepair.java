@@ -187,7 +187,7 @@ public class JRSRepair {
                 mutation.mutate();
                 
                 /* Check if all the variables are in scope in the new AST. */
-                this.checkScope(mutation.getRewriter());
+                this.checkScope(mutation.getRewriter()); // TODO: If something is out of scope, don't execute. We need to move this check inside getRandomMutation (actually refactor to call something else).
                 
                 this.logMutation(mutation);
                 
@@ -360,37 +360,33 @@ public class JRSRepair {
 	}
 
 	/**
-	 * Checks that the AST produced by the mutation is well formed
-	 * and all variables are in-scope.
+	 * Checks that the AST produced by the mutation has all variables in-scope.
+	 * 
+	 * To do this, we create a new AST by parsing the mutated source and compute
+	 * bindings. We then look to see if there are any bindings missing. If bindings
+	 * are missing, there is something not in-scope and the program will not compile.
+	 * 
+	 * @param rewriter The AST rewriter that contains the mutated document.
 	 */
-	public void checkScope(DocumentASTRewrite rewriter) {
+	private boolean checkScope(DocumentASTRewrite rewriter) {
 		String source = rewriter.modifiedDocument.get();
-		//ASTParser scopeParser = ASTParser.newParser(AST.JLS8);
-		ASTParser scopeParser = this.parser;
-		scopeParser.setKind(ASTParser.K_COMPILATION_UNIT);
-		scopeParser.setSource(source.toCharArray());
-		scopeParser.setEnvironment(this.classpaths, this.sourcepaths, null, true); 
-		scopeParser.setBindingsRecovery(true);
-		scopeParser.setResolveBindings(true);
 
-		Map<String, String> options = JavaCore.getOptions();
-		parser.setCompilerOptions(options);
- 
-		String unitName = rewriter.backingFile.getName();
-		parser.setUnitName(unitName);
+		this.parser.setSource(source.toCharArray());
+		this.parser.setEnvironment(this.classpaths, this.sourcepaths, null, true); 
+		this.parser.setResolveBindings(true);
+		this.parser.setUnitName(rewriter.backingFile.getName());
 
-		CompilationUnit node = (CompilationUnit) scopeParser.createAST(null);
+		ASTNode node = this.parser.createAST(null);
 
-		// TODO: We need to check that all variables are in scope.
-//		ScopeASTVisitor scopeASTVisitor = new ScopeASTVisitor();
-		SimpleNameASTVisitor scopeASTVisitor = new SimpleNameASTVisitor();
+		ScopeASTVisitor scopeASTVisitor = new ScopeASTVisitor();
 		node.accept(scopeASTVisitor);
-		//System.out.print(node.toString());
-		if(scopeASTVisitor.inScope) System.out.println("\nAll variables are in-scope.");
-		else System.out.println("\nSome variables are out of scope.");
-		//System.out.print(node);
-		//System.out.print("BREAK");
-		//System.out.print(source);
+
+		if(!scopeASTVisitor.inScope){
+            System.out.println("\nSome variables are out of scope.");
+            return false;
+		}
+
+		return true;
 	}
 	
     /**
@@ -408,58 +404,25 @@ public class JRSRepair {
 	}
 
 	/**
-	 * Checks that all variables have bindings (they are in scope).
+	 * Checks that each variable, field, method and type has a binding. If
+	 * one of these does not have a binding, we assume it is out of scope.
+	 * This is used for checking to make sure mutated ASTs will be compilable.
 	 * @author qhanam
 	 */
 	private class ScopeASTVisitor extends ASTVisitor{
-		
+
 		public boolean inScope;
 		
 		public ScopeASTVisitor(){ 
 			this.inScope = true;
 		}
-		
-//		public boolean visit(PackageDeclaration pd) { return false; }
-//		public boolean visit(ImportDeclaration id) { return false; }
 
 		/**
-		 * We only want to check expressions because expressions contain variables.
-		 */
-		@Override
-		public boolean visit(FieldAccess node){
-			SimpleNameASTVisitor simple = new SimpleNameASTVisitor();
-			node.accept(simple);
-			this.inScope = simple.inScope;
-			return false;
-		}
-		
-		@Override
-		public boolean visit(ExpressionStatement es){
-			es.getExpression().accept(new SimpleNameASTVisitor());
-			return true;
-		}
-	}
-
-	/**
-	 * Checks that each simple name has a binding.
-	 * @author qhanam
-	 */
-	private class SimpleNameASTVisitor extends ASTVisitor{
-
-		public boolean inScope;
-		
-		public SimpleNameASTVisitor(){ 
-			this.inScope = true;
-		}
-
-		/**
-		 * We want to check the root of all qualified names. That is,
-		 * we want all SimpleNames that aren't part of QualifiedName.
+		 * Check that each QualifiedName has a binding. This
+		 * will ensure that the fully qualified name gets
+		 * checked instead of it's parts.
 		 */
 		public boolean visit(QualifiedName qn){
-			System.out.println("getFullyQualifiedName: " + qn.getFullyQualifiedName());
-			System.out.println("getQualifer: " + qn.getQualifier());
-			System.out.println("getName: " + qn.getName());
 
 			if(qn.resolveBinding() == null) {
 				System.out.println(qn + " has no binding.");
@@ -470,10 +433,10 @@ public class JRSRepair {
 		}
 
 		/**
-		 * Check that each SimpleName ASTNode has a binding.
+		 * Check that each SimpleName ASTNode has a binding. These
+		 * will be variables, fields, methods and types.
 		 */
 		public boolean visit(SimpleName s) {
-			System.out.println("checking " + s);
 
 			if(s.resolveBinding() == null) {
 				System.out.println(s + " has no binding.");

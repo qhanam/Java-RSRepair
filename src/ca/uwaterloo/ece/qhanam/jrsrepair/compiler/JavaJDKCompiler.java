@@ -42,10 +42,13 @@ public class JavaJDKCompiler {
 	 */
 	public int compile() throws Exception{
 		StringWriter output = new StringWriter();
+		
+		/* Build the map of source files that the compiler will read from. The
+		 * modified files will be returned by DocumentASTRewrite. */
 		Map<String, String> sourceMap = this.buildSourceMap();
 		
 		/* Compile the Java file. */
-	    mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
+	    this.mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
 
 	    /* Check the compilation went ok. */
 	    //System.out.println(output.toString());

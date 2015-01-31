@@ -42,7 +42,11 @@ public abstract class Mutation {
 	public void mutate() throws Exception {
 		if(mutated) throw new Exception("A mutate operation has allready been applied. Must call undo() before mutating again.");
 		this.docrwt.taintDocument();
+		
+		/* The subclass will perform its mutation. */
 		this.concreteMutate();
+		
+		this.mutated = true;
 	}
 
 	protected abstract void concreteMutate() throws Exception;
@@ -56,7 +60,7 @@ public abstract class Mutation {
 	 * Best used with memento pattern.
 	 */
 	public void undo() throws Exception {
-		if(mutated) throw new Exception("The mutate operation has not been applied. Must call mutate() before undo().");
+		if(!mutated) throw new Exception("The mutate operation has not been applied. Must call mutate() before undo().");
 
 		this.docrwt.taintDocument();
 		this.concreteUndo();
@@ -67,6 +71,15 @@ public abstract class Mutation {
 	}
 
 	protected abstract void concreteUndo() throws Exception;
+	
+	/**
+	 * Returns the document modified by the mutation.
+	 * @return
+	 */
+	public DocumentASTRewrite getRewriter() throws Exception{
+		if(!mutated) throw new Exception("No mutation operation has been applied. Must call mutate() before getMutatedDocument().");
+        return this.docrwt;
+	}
 	
 	@Override
 	public String toString(){

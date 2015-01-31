@@ -35,7 +35,7 @@ public class AdditionMutation extends Mutation {
         lrwt.insertFirst(seedCopy, null);
         lrwt.insertLast(faultyCopy, null);
 
-        /* Replace the faulty statement with the empty Block. */
+        /* Replace the faulty statement with the new Block. */
         rewrite.replace(faulty.statement, this.addedBlock, null);
         
         /* Modify the source code file. */

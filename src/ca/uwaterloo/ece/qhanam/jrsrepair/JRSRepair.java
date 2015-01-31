@@ -3,6 +3,7 @@ package ca.uwaterloo.ece.qhanam.jrsrepair;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.LinkedList;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -52,6 +54,8 @@ public class JRSRepair {
 	
 	private Stack<String> patches;
 	private File buildDirectory;
+	
+	private ASTParser parser;
 	
 	private Integer currentMutation; // TODO: Fix this hack.
 	
@@ -103,6 +107,7 @@ public class JRSRepair {
 		
 		this.currentMutation = null;
 		
+		this.parser = null; // Initialize to null since all the parsing is done in buildASTs();
 	}
 	
 	/**
@@ -112,7 +117,7 @@ public class JRSRepair {
 		/* Create the ASTParser with the source files to generate ASTs for, and set up the
 		 * environment using ASTParser.setEnvironment.
 		 */
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		this.parser = ASTParser.newParser(AST.JLS8);
 		
 		/* setEnvironment(
 		 * String[] classpathEntries,
@@ -180,7 +185,13 @@ public class JRSRepair {
                 
                 /* Apply the mutation to the AST + Document. */
                 mutation.mutate();
+                
+                /* Check if all the variables are in scope in the new AST. */
+                this.checkScope(mutation.getRewriter());
+                
                 this.logMutation(mutation);
+                
+                /* Attempt to compile the program. */
                 compiled = this.compiler.compile();
                 
                 try{
@@ -339,12 +350,47 @@ public class JRSRepair {
 	private static HashMap<String, DocumentASTRewrite> buildSourceDocumentMap(String[] sourceFilesArray) throws Exception{
 		HashMap<String, DocumentASTRewrite> map = new HashMap<String, DocumentASTRewrite>();
 		for(String sourceFile : sourceFilesArray){
-            byte[] encoded = Utilities.readFromFile(new File(sourceFile));
+			File backingFile = new File(sourceFile);
+            byte[] encoded = Utilities.readFromFile(backingFile);
             IDocument contents = new Document(new String(encoded));
-            DocumentASTRewrite docrw = new DocumentASTRewrite(contents, null);
+            DocumentASTRewrite docrw = new DocumentASTRewrite(contents, backingFile, null);
             map.put(sourceFile, docrw);
 		}
 		return map;
+	}
+
+	/**
+	 * Checks that the AST produced by the mutation is well formed
+	 * and all variables are in-scope.
+	 */
+	public void checkScope(DocumentASTRewrite rewriter) {
+		String source = rewriter.modifiedDocument.get();
+		//ASTParser scopeParser = ASTParser.newParser(AST.JLS8);
+		ASTParser scopeParser = this.parser;
+		scopeParser.setKind(ASTParser.K_COMPILATION_UNIT);
+		scopeParser.setSource(source.toCharArray());
+		scopeParser.setEnvironment(this.classpaths, this.sourcepaths, null, true); 
+		scopeParser.setBindingsRecovery(true);
+		scopeParser.setResolveBindings(true);
+
+		Map<String, String> options = JavaCore.getOptions();
+		parser.setCompilerOptions(options);
+ 
+		String unitName = rewriter.backingFile.getName();
+		parser.setUnitName(unitName);
+
+		CompilationUnit node = (CompilationUnit) scopeParser.createAST(null);
+
+		// TODO: We need to check that all variables are in scope.
+//		ScopeASTVisitor scopeASTVisitor = new ScopeASTVisitor();
+		SimpleNameASTVisitor scopeASTVisitor = new SimpleNameASTVisitor();
+		node.accept(scopeASTVisitor);
+		//System.out.print(node.toString());
+		if(scopeASTVisitor.inScope) System.out.println("\nAll variables are in-scope.");
+		else System.out.println("\nSome variables are out of scope.");
+		//System.out.print(node);
+		//System.out.print("BREAK");
+		//System.out.print(source);
 	}
 	
     /**
@@ -358,6 +404,83 @@ public class JRSRepair {
 		} catch (Exception e){
 			System.out.println(e.getMessage());
 			throw e;
+		}
+	}
+
+	/**
+	 * Checks that all variables have bindings (they are in scope).
+	 * @author qhanam
+	 */
+	private class ScopeASTVisitor extends ASTVisitor{
+		
+		public boolean inScope;
+		
+		public ScopeASTVisitor(){ 
+			this.inScope = true;
+		}
+		
+//		public boolean visit(PackageDeclaration pd) { return false; }
+//		public boolean visit(ImportDeclaration id) { return false; }
+
+		/**
+		 * We only want to check expressions because expressions contain variables.
+		 */
+		@Override
+		public boolean visit(FieldAccess node){
+			SimpleNameASTVisitor simple = new SimpleNameASTVisitor();
+			node.accept(simple);
+			this.inScope = simple.inScope;
+			return false;
+		}
+		
+		@Override
+		public boolean visit(ExpressionStatement es){
+			es.getExpression().accept(new SimpleNameASTVisitor());
+			return true;
+		}
+	}
+
+	/**
+	 * Checks that each simple name has a binding.
+	 * @author qhanam
+	 */
+	private class SimpleNameASTVisitor extends ASTVisitor{
+
+		public boolean inScope;
+		
+		public SimpleNameASTVisitor(){ 
+			this.inScope = true;
+		}
+
+		/**
+		 * We want to check the root of all qualified names. That is,
+		 * we want all SimpleNames that aren't part of QualifiedName.
+		 */
+		public boolean visit(QualifiedName qn){
+			System.out.println("getFullyQualifiedName: " + qn.getFullyQualifiedName());
+			System.out.println("getQualifer: " + qn.getQualifier());
+			System.out.println("getName: " + qn.getName());
+
+			if(qn.resolveBinding() == null) {
+				System.out.println(qn + " has no binding.");
+				this.inScope = false;
+			}
+			
+			return false;
+		}
+
+		/**
+		 * Check that each SimpleName ASTNode has a binding.
+		 */
+		public boolean visit(SimpleName s) {
+			System.out.println("checking " + s);
+
+			if(s.resolveBinding() == null) {
+				System.out.println(s + " has no binding.");
+				this.inScope = false;
+			}
+			
+			return false;
 		}
 	}
 }

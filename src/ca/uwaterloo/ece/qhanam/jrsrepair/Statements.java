@@ -177,7 +177,6 @@ public class Statements {
 		 * Get the names of potential variables used in this statement.
 		 */
 		public boolean visit(SimpleName var) {
-			IBinding binding = var.resolveBinding();
 			this.variableNames.add(var.toString());
 			return false;
 		}

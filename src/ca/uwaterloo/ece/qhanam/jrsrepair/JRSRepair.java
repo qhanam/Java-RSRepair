@@ -3,7 +3,6 @@ package ca.uwaterloo.ece.qhanam.jrsrepair;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 import java.util.LinkedList;
 import java.util.Collection;
@@ -16,7 +15,6 @@ import java.util.HashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -279,8 +277,8 @@ public class JRSRepair {
         } catch(Exception e) { }
 
         try{
-            out.close();
-        } catch(Exception e) { }
+            if(out != null) out.close();
+        } catch(Exception ignore) { System.out.println("Problem closing writer for " + file.getName() + "."); }
 	}
 	
 	/**

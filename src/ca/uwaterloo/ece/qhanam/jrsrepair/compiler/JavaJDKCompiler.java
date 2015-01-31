@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
-import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair;
 import ca.uwaterloo.ece.qhanam.jrsrepair.Utilities;
 import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair.TestStatus;
 

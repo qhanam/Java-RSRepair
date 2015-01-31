@@ -16,19 +16,17 @@ public class TestExecutor {
 	
 	private File baseDirectory;
 	private String antPath;
-	private String antCompileTarget;
 	private String antTestTarget;
 
 	public TestExecutor(File baseDirectory, String antPath, String antCompileTarget, String antTestTarget){
 		this.baseDirectory = baseDirectory;
 		this.antPath = antPath;
-		this.antCompileTarget = antCompileTarget;
 		this.antTestTarget = antTestTarget;
 	}
 	
 	/**
 	 * Run the script (e.g., ant) to run the JUnit test cases.
-	 * @return -1 = failed to compile, 0 = compiled, 1 = passed all test cases
+	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
 	public JRSRepair.TestStatus runTests() throws Exception{

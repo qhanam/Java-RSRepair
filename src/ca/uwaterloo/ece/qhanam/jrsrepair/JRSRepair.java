@@ -57,7 +57,14 @@ public class JRSRepair {
 	
 	private ASTParser parser;
 	
-	private Integer currentMutation; // TODO: Fix this hack.
+	/* currentMutation is used to keep track of what mutation has been chosen for a 
+	 * mutation generation. This is needed because some mutations are more likely to
+	 * compile than others. For example, a deletion operation is more likely to 
+	 * compile than an insertion because an insertion may introduce variables that
+	 * are out of scope. This has been mitigated a bit with better scope checking, 
+	 * but is still good practice to ensure truly random mutations.
+	 */
+	private Integer currentMutation;
 	
 	/**
 	 * Creates a JRSRepair object with the path to the source folder
@@ -162,7 +169,9 @@ public class JRSRepair {
 	 * The main method for trying a mutation. It performs all the operations needed 
 	 * to mutate, compile and test the program. It is recursive and will therefore
 	 * attempt multiple mutations at a time before rolling back their changes. 
-	 * @param generation The number of mutations that have already been applied.
+	 * 
+	 * @param candidate The identifier for the current set of mutations.
+	 * @param generation The number of mutations that have already been applied for the current candidate.
 	 */
 	private void mutationIteration(int candidate, int generation) throws Exception{
         /* If we can't find a solution within some number of iterations, abort. */
@@ -172,14 +181,22 @@ public class JRSRepair {
         System.out.println("Running generation " + generation + " ...");
         
         Mutation mutation = null;
-        int compiled = -1;
+        TestStatus compiled = TestStatus.NOT_COMPILED;
         
-        try{
-            /* We need to ensure the first levels compile or else the rest of the
-             * mutations won't be useful. */
-            do {
-            	compiled = -1;
+        /* We need to ensure the first levels compile or else the rest of the
+         * mutations won't be useful. */
+        do {
+            compiled = TestStatus.NOT_COMPILED;
+            
+            /* First we need to get a mutation that will likely compile. To do this
+             * we randomly select a mutation, apply the mutation to the AST to get
+             * a new document, parse the new document into an AST (having the parser
+             * attempt to resolve bindings) and finally check that all variables have
+             * bindings.*/
 
+            do{
+            	if(mutation != null && mutation.mutated()) mutation.undo();
+            	
                 /* Get a random mutation operation to apply. */
                 mutation = this.getRandomMutation();
                 
@@ -187,64 +204,56 @@ public class JRSRepair {
                 mutation.mutate();
                 
                 /* Check if all the variables are in scope in the new AST. */
-                this.checkScope(mutation.getRewriter()); // TODO: If something is out of scope, don't execute. We need to move this check inside getRandomMutation (actually refactor to call something else).
-                
-                this.logMutation(mutation);
-                
-                /* Attempt to compile the program. */
-                compiled = this.compiler.compile();
-                
-                try{
-                    /* Compile the program and execute the test cases. */
-                    if(compiled >= 0) compiled = this.testExecutor.runTests();
-                } catch (Exception e){
-                    System.err.println("JRSRepair: Exception thrown during test execution.");
-                    System.err.println(e.getMessage());
-                }
-                finally { 
-                    /* Roll back the current mutation. */
-                    if(compiled < 0) {
-                        System.out.print(" - Did not compile\n");
-                        mutation.undo(); 
-                    } else {
-                    	this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                        System.out.print(" - Compiled!");
-                    }
-                }
-
-                attemptCounter++;
-
-            } while(compiled < 0 && attemptCounter < this.mutationAttempts);
+            } while(!this.checkScope(mutation.getRewriter()));
             
-            this.currentMutation = null;
+            this.logMutation(mutation);
             
-            if(compiled > 0) {
-                this.logSuccesfullPatch(candidate, generation);
-            	System.out.print(" Passed!\n");
+            /* Now that we have a mutation that is in-scope, we attempt to compile 
+             * the program. If the program compiles, we run the test cases. If it
+             * doesn't, we roll back the changes and loop to get another mutation. */
+
+            compiled = this.compiler.compile();
+            
+            try{
+                /* Compile the program and execute the test cases. */
+                if(compiled == TestStatus.COMPILED) compiled = this.testExecutor.runTests();
+            } catch (Exception e){
+                System.err.println("JRSRepair: Exception thrown during test execution.");
+                System.err.println(e.getMessage());
             }
-            else if(compiled == 0) System.out.print("\n");
+            finally { 
+                /* Roll back the current mutation. */
+                if(compiled == TestStatus.NOT_COMPILED) {
+                    System.out.print(" - Did not compile\n");
+                    mutation.undo(); 
+                } else {
+                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                    System.out.print(" - Compiled!");
+                }
+            }
+
+            attemptCounter++;
+
+        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.mutationAttempts);
         
-            /* Recurse to the next level of mutations. */
-            if(generation < this.mutationGenerations){ 
-                this.mutationIteration(candidate, generation + 1);
-            }
+        this.currentMutation = null;
+        
+        if(compiled == TestStatus.TESTS_PASSED) {
+            this.logSuccesfullPatch(candidate, generation);
+            System.out.print(" Passed!\n");
+        }
+        else if(compiled == TestStatus.TESTS_FAILED) System.out.print("\n");
+    
+        /* Recurse to the next level of mutations. */
+        if(generation < this.mutationGenerations){ 
+            this.mutationIteration(candidate, generation + 1);
+        }
 
-            if(compiled >= 0) {
-            	this.patches.pop();
-            	mutation.undo();
-            }
-
-        } catch (Exception e) {
-            /* For robustness, reset the program if this is the first generation and continue. */
-        	if(generation == 1){
-//                System.out.println("JRSRepair: Exception thrown during mutation recursion.");
-//                System.out.println(e.getMessage());
-//                this.patches.clear();
-        		throw e;
-        	} else {
-        		throw e;
-        	}
-        } 
+        /* Since this.patches in a field, we need to unwind the patch stack. */
+        if(compiled == TestStatus.TESTS_FAILED || compiled == TestStatus.TESTS_PASSED) {
+            this.patches.pop();
+            mutation.undo();
+        }
 	}
 	
 	/**
@@ -276,6 +285,7 @@ public class JRSRepair {
 	
 	/**
 	 * Returns a random mutation operation.
+	 * 
 	 * @return A Mutation memento object for applying one mutation to a faulty statement.
 	 */
 	private Mutation getRandomMutation(){
@@ -284,7 +294,7 @@ public class JRSRepair {
 		if(this.currentMutation == null) this.currentMutation = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
 		
 		switch(this.currentMutation){
-		case 100: // Useful to make sure the program compiles.
+		case 100: // Use for testing (e.g., to make sure the program compiles without mutations).
 			System.out.print("Applying null mutation...");
 			mutation = new NullMutation(sourceFileContents, faultyStatements.getRandomStatement(), null);
 			break;
@@ -382,7 +392,7 @@ public class JRSRepair {
 		node.accept(scopeASTVisitor);
 
 		if(!scopeASTVisitor.inScope){
-            System.out.println("\nSome variables are out of scope.");
+            System.out.println(" - Some variables are out of scope.");
             return false;
 		}
 
@@ -401,6 +411,13 @@ public class JRSRepair {
 			System.out.println(e.getMessage());
 			throw e;
 		}
+	}
+	
+	/**
+	 * Used for keeping track of compilation and test progress.
+	 */
+	public enum TestStatus{
+		NOT_COMPILED, COMPILED, TESTS_FAILED, TESTS_PASSED
 	}
 
 	/**
@@ -423,9 +440,10 @@ public class JRSRepair {
 		 * checked instead of it's parts.
 		 */
 		public boolean visit(QualifiedName qn){
+	
+			if(!this.inScope) return false; // No point in checking if we're already out of scope
 
 			if(qn.resolveBinding() == null) {
-				System.out.println(qn + " has no binding.");
 				this.inScope = false;
 			}
 			
@@ -438,8 +456,9 @@ public class JRSRepair {
 		 */
 		public boolean visit(SimpleName s) {
 
+			if(!this.inScope) return false; // No point in checking if we're already out of scope
+
 			if(s.resolveBinding() == null) {
-				System.out.println(s + " has no binding.");
 				this.inScope = false;
 			}
 			

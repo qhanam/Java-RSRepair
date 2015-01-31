@@ -41,7 +41,6 @@ public abstract class Mutation {
 	 */
 	public void mutate() throws Exception {
 		if(mutated) throw new Exception("A mutate operation has allready been applied. Must call undo() before mutating again.");
-		this.docrwt.taintDocument();
 		
 		/* The subclass will perform its mutation. */
 		this.concreteMutate();
@@ -49,6 +48,11 @@ public abstract class Mutation {
 		this.mutated = true;
 	}
 
+	/**
+	 * Each concrete mutator will perform its own mutation to the AST and
+	 * write the new AST to a document in DocumentASTRewrite.
+	 * @throws Exception
+	 */
 	protected abstract void concreteMutate() throws Exception;
 	
 	/**
@@ -62,7 +66,7 @@ public abstract class Mutation {
 	public void undo() throws Exception {
 		if(!mutated) throw new Exception("The mutate operation has not been applied. Must call mutate() before undo().");
 
-		this.docrwt.taintDocument();
+		/* Undo the operation applied to the AST. */
 		this.concreteUndo();
 		
 		/* Relinquish use of the statements. */
@@ -70,6 +74,12 @@ public abstract class Mutation {
 		if(this.seed != null) this.seed.inUse = false;
 	}
 
+	/**
+	 * Each concrete mutator must also be able to undo its mutation. Because
+	 * mutation operations are recursive, the concrete mutator must undo its
+	 * own AST mutation, then re-write the document.
+	 * @throws Exception
+	 */
 	protected abstract void concreteUndo() throws Exception;
 	
 	/**
@@ -79,6 +89,13 @@ public abstract class Mutation {
 	public DocumentASTRewrite getRewriter() throws Exception{
 		if(!mutated) throw new Exception("No mutation operation has been applied. Must call mutate() before getMutatedDocument().");
         return this.docrwt;
+	}
+	
+	/**
+	 * Returns true if a mutation operation has been applied.
+	 */
+	public boolean mutated(){
+		return this.mutated;
 	}
 	
 	@Override

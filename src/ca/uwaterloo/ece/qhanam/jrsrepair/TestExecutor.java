@@ -31,7 +31,7 @@ public class TestExecutor {
 	 * @return -1 = failed to compile, 0 = compiled, 1 = passed all test cases
 	 * @throws Exception
 	 */
-	public int runTests() throws Exception{
+	public JRSRepair.TestStatus runTests() throws Exception{
 	    
 	    /* The program has successfully compiled, so run the JUnit tests. */
         ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
@@ -52,7 +52,7 @@ public class TestExecutor {
           process.waitFor();
           
           /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return 1;
+          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return JRSRepair.TestStatus.TESTS_PASSED;
 
         }catch(InterruptedException e){ 
           System.out.println("Interrupted Exception during JUnit run.");
@@ -60,6 +60,6 @@ public class TestExecutor {
         }
 
         /* The program compiled, but failed one or more test cases. */
-        return 0;
+        return JRSRepair.TestStatus.TESTS_FAILED;
 	}
 }

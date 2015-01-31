@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
+import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair;
 import ca.uwaterloo.ece.qhanam.jrsrepair.Utilities;
+import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair.TestStatus;
 
 /**
  * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
@@ -40,7 +42,7 @@ public class JavaJDKCompiler {
 	 * @return true if there were no compilation errors.
 	 * @throws Exception
 	 */
-	public int compile() throws Exception{
+	public TestStatus compile() throws Exception{
 		StringWriter output = new StringWriter();
 		
 		/* Build the map of source files that the compiler will read from. The
@@ -53,12 +55,12 @@ public class JavaJDKCompiler {
 	    /* Check the compilation went ok. */
 	    //System.out.println(output.toString());
 	    if(output.toString().matches("(?s).*\\d+ errors?.*")){
-	    	return -1;
+	    	return TestStatus.NOT_COMPILED;
 	    }
 	    
 	    /* Write the class files to disk. */
 	    this.storeCompiled(this.classDirectory);
-        return 0;
+        return TestStatus.COMPILED;
 	}
 	
 	/**

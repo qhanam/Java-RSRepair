@@ -157,9 +157,11 @@ public class JRSRepair {
 				System.out.println("Running candidate " + (i + 1) + " ...");
                 this.mutationIteration(i + 1, 1);
 			}
-		}
-		finally {
             System.out.println("Finished!");
+		}
+		catch(Exception e){
+			System.out.println("Error: " + e.getMessage());
+			throw e;
 		}
 	}
 

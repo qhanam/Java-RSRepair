@@ -1,115 +1,126 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.test;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.LinkedList;
+import java.util.Properties;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.*;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 
+/**
+ * This class implements a program that attempts to automatically fix a
+ * faulty program using JRSRepair. It takes one argument, the path to the
+ * configuration file that is used to configure JRSRepair.
+ * 
+ * @author qhanam
+ */
 public class SampleUse {
 	
-	public static final String[] SOURCE_DIRECTORY = {"/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/src"};
-	public static final String FAULTY_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/faulty.cov";
-	public static final String SEED_COVERAGE = "/Users/qhanam/Documents/workspace_repair/ca.uwaterloo.ece.qhanam.jrsrepair/cov/seed.cov";
-	
-	public static final int MUTATION_CANDIDATES = 40; 
-	public static final int MUTATION_GENERATIONS = 10;
-	public static final int MUTATION_ATTEMPTS = 100;
-	
-	public static final String ANT_BASE_DIR = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/";
-	public static final String ANT_PATH = "/usr/bin/ant";
-	public static final String ANT_COMPILE_TARGET = "compile";
-	public static final String ANT_TEST_TARGET = "junit";
-	
-	public static final long RANDOM_SEED = 3;
-	
-	public static final File BUILD_DIRECTORY = new File("/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build");
-	
-	/* The class directory is the directory that stores the compiled class files. */
-	public static final String CLASS_DIRECTORY = "/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/build/classes";
-	
-	/* The classpath is used to resolve binding. These are absolute paths to .jar files or base directories containing .class files. This does not need to 
-	 * include the default system classpath (i.e., Java standard libraries). */
-	public static final String[] CLASSPATH = {};
-	
-	/* The sourcepath is used to resolve bindings. These are the base directories containing source files. */
-	public static final String[] SOURCEPATH = {"/Users/qhanam/Documents/workspace_faultlocalization/ca.uwaterloo.ece.qhanam.localization/src"};
-
 	public static void main(String[] args) throws Exception {
 		if(args.length > 0){
-			String[] sourceDirectories = readSourceFiles(new File(args[0]));
-			JRSRepair repair = readConfigFile(new File(args[1]), sourceDirectories);
+			JRSRepair repair = readConfigFile(new File(args[0]));
             repair.buildASTs();
             repair.repair();
 		}
 		else{
-            TestExecutor testExecutor = new TestExecutor(new File(ANT_BASE_DIR), ANT_PATH, ANT_COMPILE_TARGET, ANT_TEST_TARGET);
-            JavaJDKCompiler compiler = new JavaJDKCompiler(CLASS_DIRECTORY, CLASSPATH);
-            JRSRepair repair = new JRSRepair(SOURCE_DIRECTORY, CLASSPATH, new File(FAULTY_COVERAGE), new File(SEED_COVERAGE), 
-                                             MUTATION_CANDIDATES, MUTATION_GENERATIONS, MUTATION_ATTEMPTS, RANDOM_SEED, 
-                                             BUILD_DIRECTORY, compiler, testExecutor);
-            repair.buildASTs();
-            repair.repair();
+			System.out.println("Use: java SampleUse [/path/to/jrsrepair.properties]");
 		}
-		
 	}
 	
-	public static String[] readSourceFiles(File file) throws Exception{
-		String[] sourceDirectoryArray;
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		LinkedList<String> sourceDirectories = new LinkedList<String>();
-
-		for(String line = reader.readLine(); line != null; line = reader.readLine()){
-			sourceDirectories.add(line.trim());
-		}
+	/**
+	 * Reads the configuration file and sets up the compiler, ant junit tests and JRSRepair.
+	 * @param config The .properties file.
+	 * @return An instance of JRSRepair configures using the settings in the .properties file.
+	 * @throws Exception Throws an exception if a parameter is missing or incorrect.
+	 */
+	public static JRSRepair readConfigFile(File config) throws Exception{
 		
-		reader.close();
-	
-		sourceDirectoryArray = new String[sourceDirectories.size()];
-		int i = 0;
-		for(String sourceDirectory : sourceDirectories){
-			sourceDirectoryArray[i] = sourceDirectory;
-			i++;
-		}
+		Properties properties = new Properties();
+		properties.load(new FileReader(config));
 		
-		return sourceDirectoryArray;
-	}
-	
-	public static JRSRepair readConfigFile(File file, String[] sourceDirectories) throws Exception{
         TestExecutor testExecutor;
         JavaJDKCompiler compiler;
 		JRSRepair repair;
 
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-
-        File faultyCoverage = new File(reader.readLine().trim());
-        File seedCoverage = new File(reader.readLine().trim());
-	
-        int mutationCandidates = Integer.parseInt(reader.readLine().trim());
-        int mutationGenerations = Integer.parseInt(reader.readLine().trim());
-        int mutationAttempts = Integer.parseInt(reader.readLine().trim()); 
-
-        File antBaseDirectory = new File(reader.readLine().trim());
-        String antPath = reader.readLine().trim();
-        String antCompileTarget = reader.readLine().trim();
-        String antTestTarget = reader.readLine().trim();
-
-        long randomSeed = Integer.parseInt(reader.readLine().trim());
-
-    	File buildDirectory = new File(reader.readLine());
-    	String classDirectory = reader.readLine();
-    	String[] classPath = reader.readLine().split(";");
-
-		reader.close();
+		/* Get the coverage files from fault localization. */
 		
-        testExecutor = new TestExecutor(antBaseDirectory, antPath, antCompileTarget, antTestTarget);
+		if(!properties.containsKey("faulty_coverage")) throw new Exception("Parameter 'faulty_coverage' not found in properties");
+		if(!properties.containsKey("seed_coverage")) throw new Exception("Parameter 'seed_coverage' not found in properties");
+
+        File faultyCoverage = new File(properties.getProperty("faulty_coverage"));
+        File seedCoverage = new File(properties.getProperty("faulty_coverage"));
+        
+        /* Get the settings for mutant generation. */
+
+		if(!properties.containsKey("mutation_candidates")) throw new Exception("Parameter 'mutation_candidates' not found in properties");
+		if(!properties.containsKey("mutation_generations")) throw new Exception("Parameter 'mutation_generations' not found in properties");
+		if(!properties.containsKey("mutation_attempts")) throw new Exception("Parameter 'mutation_attempts' not found in properties");
+	
+        int mutationCandidates = Integer.parseInt(properties.getProperty("mutation_candidates"));
+        int mutationGenerations = Integer.parseInt(properties.getProperty("mutation_generations"));
+        int mutationAttempts = Integer.parseInt(properties.getProperty("mutation_attempts")); 
+
+        /* Get the Ant settings (used to run test cases) */
+
+		if(!properties.containsKey("ant_base_dir")) throw new Exception("Parameter 'ant_base_dir' not found in properties");
+		if(!properties.containsKey("ant_path")) throw new Exception("Parameter 'ant_path' not found in properties");
+		if(!properties.containsKey("ant_test_target")) throw new Exception("Parameter 'ant_test_target' not found in properties");
+
+        File antBaseDirectory = new File(properties.getProperty("ant_base_dir"));
+        String antPath = properties.getProperty("ant_path");
+        String antTestTarget = properties.getProperty("ant_test_target");
+
+        /* Get the location for the log files and class files. */
+
+		if(!properties.containsKey("build_directory")) throw new Exception("Parameter 'build_directory' not found in properties");
+		if(!properties.containsKey("class_directory")) throw new Exception("Parameter 'class_directory' not found in properties");
+
+    	File buildDirectory = new File(properties.getProperty("build_directory"));
+    	String classDirectory = properties.getProperty("class_directory");
+
+    	/* get the path settings for parsing the AST (and resolving bindings) and compiling. */
+
+		if(!properties.containsKey("classpath")) throw new Exception("Parameter 'classpath' not found in properties");
+		if(!properties.containsKey("sourcepath")) throw new Exception("Parameter 'sourcepath' not found in properties");
+
+    	String[] classPath = unpackArray(properties.getProperty("classpath"));
+    	String[] sourcePath = unpackArray(properties.getProperty("sourcepath"));
+
+        /* Get the random seed to use. 
+         * Different random seeds will cause different mutation operation orders and different statement selections. */
+
+        long randomSeed = Integer.parseInt(properties.getProperty("random_seed"));
+        
+        /* Set up the three repair components:
+         * 	TestExecutor - executes JUnit test cases using an ant task
+         * 	JavaJDKCompiler - runs javac to compile the mutated source (doesn't actually use JDT compiler)
+         * 	JRSRepair - mutates the source code and oversees the compilation and test execution
+         */
+		
+        testExecutor = new TestExecutor(antBaseDirectory, antPath, antTestTarget);
         compiler = new JavaJDKCompiler(classDirectory, classPath);
-        repair = new JRSRepair(sourceDirectories, classPath, faultyCoverage, seedCoverage, 
+        repair = new JRSRepair(sourcePath, classPath, faultyCoverage, seedCoverage, 
                                  mutationCandidates, mutationGenerations, mutationAttempts, randomSeed, 
                                  buildDirectory, compiler, testExecutor);
 
 		return repair;
+	}
+	
+	/**
+	 * Converts a serialized array in the format "{string1,string2,...,stringN}" 
+	 * to a String array.
+	 * @param packed The seralized array.
+	 * @return The String[] array
+	 */
+	private static String[] unpackArray(String packed) throws Exception{
+		String[] unpacked = null;
+
+		if(packed.substring(0, 1).equals("{") && packed.substring(packed.length() - 1, packed.length()).equals("}")){
+			packed = packed.substring(1, packed.length() - 1);
+			unpacked = packed.split(";");
+		}
+		else throw new Exception("Array not enclosed in parenthesis '{ }', cannot unpack.");
+
+		return unpacked;
 	}
 }

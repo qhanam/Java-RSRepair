@@ -6,11 +6,12 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 import java.util.HashMap;
 
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.text.edits.*;
 
 public class ReplacementMutation extends Mutation {
 	
-	private ASTNode replacementNode;	// The copied seed statement that replaced the faulty statement
+	private Block addedBlock;		// The block that has been added containing the faulty and seed statements.
 	
 	public ReplacementMutation(HashMap<String, DocumentASTRewrite> sourceFileContents, SourceStatement faulty, SourceStatement seed){
 		super(sourceFileContents, faulty, seed);
@@ -21,11 +22,18 @@ public class ReplacementMutation extends Mutation {
 	 */
 	@Override
 	public void concreteMutate() throws Exception {
+        /* Create a new block to insert in place of the deleted statement. */
+        this.addedBlock = (Block) this.rewrite.getAST().createInstance(Block.class);
+
         /* Make a copy of the seed statement and base it in the faulty statement's AST. */
-        this.replacementNode = ASTNode.copySubtree(this.rewrite.getAST(), seed.statement);
-        
-        /* Replace the faulty statement with the seed statement. */
-        rewrite.replace(faulty.statement, this.replacementNode, null);
+        ASTNode seedCopy = ASTNode.copySubtree(this.rewrite.getAST(), seed.statement);
+
+        /* Insert the seed statement into the new Block. */
+        ListRewrite lrwt = this.rewrite.getListRewrite(this.addedBlock, Block.STATEMENTS_PROPERTY);
+        lrwt.insertFirst(seedCopy, null);
+
+        /* Replace the faulty statement with the new Block. */
+        rewrite.replace(faulty.statement, this.addedBlock, null);
         
         /* Modify the source code file. */
         this.docrwt.resetModifiedDocument(); // Start with the original document to avoid the AST-doesn't-match-doc error.
@@ -39,7 +47,7 @@ public class ReplacementMutation extends Mutation {
 	@Override
 	public void concreteUndo() throws Exception{
         /* Undo the edit to the AST. */
-		this.rewrite.replace(this.replacementNode, this.faulty.statement, null);
+        this.rewrite.replace(this.addedBlock, this.faulty.statement, null);
 
 		/* We need to write the undo changes back to the source file because of recursion. */
         this.docrwt.resetModifiedDocument(); // Start with the original document to avoid the AST-doesn't-match-doc error.

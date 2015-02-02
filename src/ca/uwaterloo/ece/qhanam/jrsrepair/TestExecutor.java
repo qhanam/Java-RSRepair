@@ -18,7 +18,7 @@ public class TestExecutor {
 	private String antPath;
 	private String antTestTarget;
 
-	public TestExecutor(File baseDirectory, String antPath, String antCompileTarget, String antTestTarget){
+	public TestExecutor(File baseDirectory, String antPath, String antTestTarget){
 		this.baseDirectory = baseDirectory;
 		this.antPath = antPath;
 		this.antTestTarget = antTestTarget;

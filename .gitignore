@@ -1,4 +1,7 @@
 bin/
 lib/
+sample/config/build/
 .DS_Store
 *.class
+*.jar
+*.tar

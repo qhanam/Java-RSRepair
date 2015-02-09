@@ -3,8 +3,10 @@ package ca.uwaterloo.ece.qhanam.jrsrepair.compiler;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 import ca.uwaterloo.ece.qhanam.jrsrepair.Utilities;
@@ -19,11 +21,13 @@ public class JavaJDKCompiler {
 	private String[] sourcePaths;
 	private String classDirectory;
 	private String[] classpath;
+	private Queue<String> errors;
 	
 	public JavaJDKCompiler(String classDirectory, String[] classpath){
 		this.classDirectory = classDirectory;
 		this.classpath = classpath;
 		this.mcl = null;
+		this.errors = new LinkedList<String>();
 	}
 	
 	public void setContext(Map<String, DocumentASTRewrite> sourceFileContents, String[] sourcePaths){
@@ -54,6 +58,7 @@ public class JavaJDKCompiler {
 	    /* Check the compilation went ok. */
 	    //System.out.println(output.toString());
 	    if(output.toString().matches("(?s).*\\d+ errors?.*")){
+	    	this.errors.add(output.toString());
 	    	return TestStatus.NOT_COMPILED;
 	    }
 	    

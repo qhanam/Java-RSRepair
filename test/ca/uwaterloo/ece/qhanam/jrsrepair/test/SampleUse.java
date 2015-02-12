@@ -117,7 +117,7 @@ public class SampleUse {
 
 		if(packed.substring(0, 1).equals("{") && packed.substring(packed.length() - 1, packed.length()).equals("}")){
 			packed = packed.substring(1, packed.length() - 1);
-			unpacked = packed.split(";");
+			unpacked = packed.split(",");
 		}
 		else throw new Exception("Array not enclosed in parenthesis '{ }', cannot unpack.");
 

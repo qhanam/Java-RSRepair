@@ -37,12 +37,12 @@ public class JavaJDKCompiler {
 	
 	/**
 	 * Compiles the Java source file and writes the resulting .class file to the build/classes
-	 * directory. Returns the result of the compilation (true = compiled, false = compilation
-	 * error).
+	 * directory. Returns the result of the compilation (COMPILED if ok or NOT_COMPILED if
+	 * there was an error).
 	 * @param packageName
 	 * @param className
 	 * @param document
-	 * @return true if there were no compilation errors.
+	 * @return JRSRepair.TestStatus (NOT_COMPILED or COMPILED)
 	 * @throws Exception
 	 */
 	public TestStatus compile() throws Exception{

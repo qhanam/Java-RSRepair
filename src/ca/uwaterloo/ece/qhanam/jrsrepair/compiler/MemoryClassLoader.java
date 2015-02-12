@@ -12,6 +12,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.ToolProvider;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
  */
@@ -32,7 +34,7 @@ public class MemoryClassLoader extends ClassLoader {
         List<String> optionList = new ArrayList<String>();
         // set compiler's classpath to be same as the runtime's
         optionList.add("-classpath");
-        optionList.addAll(Arrays.asList(classpath));
+        optionList.add(StringUtils.join(classpath, ":"));
 
         this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
     }

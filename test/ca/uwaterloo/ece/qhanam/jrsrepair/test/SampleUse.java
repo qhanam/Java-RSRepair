@@ -76,10 +76,17 @@ public class SampleUse {
     	String[] classPath = unpackArray(properties.getProperty("classpath"));
     	String[] sourcePath = unpackArray(properties.getProperty("sourcepath"));
 
-    	/* classdirectories is options (for multiple output directories) */
+    	/* classdirectories is optional (for multiple output directories) */
     	String[] classDirectories;
     	if(properties.containsKey("class_destination_directories")) classDirectories = unpackArray(properties.getProperty("class_destination_directories"));
     	else classDirectories = new String[] {};
+    	
+    	/* revertFailedCompile is optional (defaults to false). If true, if a compile fails, the last mutation is
+    	 * undone before moving on to the next candidate. GenProg and JRSRepair's functionality would have this
+    	 * setting false because they build patches BEFORE they execute them. */
+    	
+    	boolean revertFailedCompile = false;
+    	if(properties.containsKey("revert_failed_compile")) revertFailedCompile = Boolean.parseBoolean(properties.getProperty("revert_failed_compile"));
 
         /* Get the random seed to use. 
          * Different random seeds will cause different mutation operation orders and different statement selections. */
@@ -96,7 +103,7 @@ public class SampleUse {
         compiler = new JavaJDKCompiler(classDirectory, classPath);
         repair = new JRSRepair(sourcePath, classPath, faultyCoverage, seedCoverage, 
                                  mutationCandidates, mutationGenerations, mutationAttempts, randomSeed, 
-                                 buildDirectory, compiler, testExecutor, classDirectories);
+                                 buildDirectory, compiler, testExecutor, classDirectories, revertFailedCompile);
 
 		return repair;
 	}

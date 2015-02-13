@@ -57,6 +57,8 @@ public class JRSRepair {
 	
 	private ASTParser parser;
 	
+	private boolean revertFailedCompile;
+	
 	/* currentMutation is used to keep track of what mutation has been chosen for a 
 	 * mutation generation. This is needed because some mutations are more likely to
 	 * compile than others. For example, a deletion operation is more likely to 
@@ -74,7 +76,8 @@ public class JRSRepair {
 	public JRSRepair(String[] sourcepaths, String[] classpaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
 					 long randomSeed, File buildDirectory, JavaJDKCompiler compiler, 
-					 AbstractTestExecutor testExecutor, String[] classDirectories) throws Exception {
+					 AbstractTestExecutor testExecutor, String[] classDirectories,
+					 boolean revertFailedCompile) throws Exception {
 
 		this.scope = new HashMap<String, HashSet<String>>();
 		
@@ -96,6 +99,8 @@ public class JRSRepair {
 		this.testExecutor = testExecutor;
 		
 		this.classDirectories = classDirectories;
+		
+		this.revertFailedCompile = revertFailedCompile;
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcepaths);
@@ -237,10 +242,12 @@ public class JRSRepair {
             }
             finally { 
                 /* Roll back the current mutation. */
-                if(compiled == TestStatus.NOT_COMPILED) {
+                if(compiled == TestStatus.NOT_COMPILED && this.revertFailedCompile) {
                     System.out.print(" - Did not compile\n");
                     mutation.undo(); 
                     mutation = null;
+                } else if(compiled == TestStatus.NOT_COMPILED) {
+                    System.out.print(" - Did not compile\n");
                 } else {
                     this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
                     System.out.print(" - Compiled!");

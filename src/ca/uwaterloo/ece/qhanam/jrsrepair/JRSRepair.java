@@ -27,6 +27,8 @@ public class JRSRepair {
 	private String[] sourcepaths;
 	private File faultyCoverageFile;
 	private File seedCoverageFile;
+	
+	private String[] classDirectories;
 
 	private String[] classpaths;
 
@@ -48,7 +50,7 @@ public class JRSRepair {
 	private Random random;
 	
 	private JavaJDKCompiler compiler;
-	private TestExecutor testExecutor;
+	private AbstractTestExecutor testExecutor;
 	
 	private Stack<String> patches;
 	private File buildDirectory;
@@ -72,7 +74,7 @@ public class JRSRepair {
 	public JRSRepair(String[] sourcepaths, String[] classpaths, File faultyCoverageFile, File seedCoverageFile, 
 					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
 					 long randomSeed, File buildDirectory, JavaJDKCompiler compiler, 
-					 TestExecutor testExecutor) throws Exception {
+					 AbstractTestExecutor testExecutor, String[] classDirectories) throws Exception {
 
 		this.scope = new HashMap<String, HashSet<String>>();
 		
@@ -92,6 +94,8 @@ public class JRSRepair {
 		
 		this.compiler = compiler;
 		this.testExecutor = testExecutor;
+		
+		this.classDirectories = classDirectories;
 
 		/* Get the list of source files for us to mutate. */
 		this.sourceFilesArray = JRSRepair.getSourceFiles(this.sourcepaths);
@@ -215,8 +219,18 @@ public class JRSRepair {
             compiled = this.compiler.compile();
             
             try{
-                /* Compile the program and execute the test cases. */
-                if(compiled == TestStatus.COMPILED) compiled = this.testExecutor.runTests();
+                /* Did the program compile? If it did, run the test cases. 
+                 * We may also need to copy the .class files back to their 
+                 * class folders (for example, if we have a complex Maven
+                 * this just makes life easier than re-building ourselves). */
+                if(compiled == TestStatus.COMPILED){
+                	if(this.classDirectories.length > 0){
+                		for(String directory : this.classDirectories){
+                			Utilities.copyFiles(new File(this.buildDirectory.getPath() + "/classes"), new File(directory));
+                		}
+                	}
+                	compiled = this.testExecutor.runTests();
+                }
             } catch (Exception e){
                 System.err.println("JRSRepair: Exception thrown during test execution.");
                 System.err.println(e.getMessage());
@@ -243,8 +257,10 @@ public class JRSRepair {
             this.logSuccesfullPatch(candidate, generation);
             System.out.print(" Passed!\n");
         }
-        else if(compiled == TestStatus.TESTS_FAILED) System.out.print(" Failed.\n");
-        else if(compiled == TestStatus.TEST_ERROR) System.out.print(" Error - tests may not have run.\n");
+        else if(compiled == TestStatus.TESTS_FAILED) 
+        	System.out.print(" Failed.\n");
+        else if(compiled == TestStatus.TEST_ERROR) 
+        	System.out.print(" Error - tests may not have run.\n");
     
         /* Recurse to the next level of mutations. */
         if(generation < this.mutationGenerations){ 

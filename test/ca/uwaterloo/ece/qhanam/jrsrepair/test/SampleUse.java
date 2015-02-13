@@ -38,7 +38,7 @@ public class SampleUse {
 		Properties properties = new Properties();
 		properties.load(new FileReader(config));
 		
-        TestExecutor testExecutor;
+        AbstractTestExecutor testExecutor;
         JavaJDKCompiler compiler;
 		JRSRepair repair;
 
@@ -60,16 +60,6 @@ public class SampleUse {
         int mutationGenerations = Integer.parseInt(properties.getProperty("mutation_generations"));
         int mutationAttempts = Integer.parseInt(properties.getProperty("mutation_attempts")); 
 
-        /* Get the Ant settings (used to run test cases) */
-
-		if(!properties.containsKey("ant_base_dir")) throw new Exception("Parameter 'ant_base_dir' not found in properties");
-		if(!properties.containsKey("ant_path")) throw new Exception("Parameter 'ant_path' not found in properties");
-		if(!properties.containsKey("ant_test_target")) throw new Exception("Parameter 'ant_test_target' not found in properties");
-
-        File antBaseDirectory = new File(properties.getProperty("ant_base_dir"));
-        String antPath = properties.getProperty("ant_path");
-        String antTestTarget = properties.getProperty("ant_test_target");
-
         /* Get the location for the log files and class files. */
 
 		if(!properties.containsKey("build_directory")) throw new Exception("Parameter 'build_directory' not found in properties");
@@ -86,6 +76,11 @@ public class SampleUse {
     	String[] classPath = unpackArray(properties.getProperty("classpath"));
     	String[] sourcePath = unpackArray(properties.getProperty("sourcepath"));
 
+    	/* classdirectories is options (for multiple output directories) */
+    	String[] classDirectories;
+    	if(properties.containsKey("class_destination_directories")) classDirectories = unpackArray(properties.getProperty("class_destination_directories"));
+    	else classDirectories = new String[] {};
+
         /* Get the random seed to use. 
          * Different random seeds will cause different mutation operation orders and different statement selections. */
 
@@ -97,13 +92,52 @@ public class SampleUse {
          * 	JRSRepair - mutates the source code and oversees the compilation and test execution
          */
 		
-        testExecutor = new TestExecutor(antBaseDirectory, antPath, antTestTarget);
+        testExecutor = SampleUse.buildTestExecutor(properties);
         compiler = new JavaJDKCompiler(classDirectory, classPath);
         repair = new JRSRepair(sourcePath, classPath, faultyCoverage, seedCoverage, 
                                  mutationCandidates, mutationGenerations, mutationAttempts, randomSeed, 
-                                 buildDirectory, compiler, testExecutor);
+                                 buildDirectory, compiler, testExecutor, classDirectories);
 
 		return repair;
+	}
+	
+	/**
+	 * A factory method that builds the appropriate TestExecutor from the details
+	 * provided by the properties file. 
+	 * @param properties The properties file provided by the user.
+	 * @return The appropriate concrete instance of AbstractTestExecutor.
+	 * @throws Exception Throws an exception if a parameter in the properties file
+	 * 					 is missing.
+	 */
+	private static AbstractTestExecutor buildTestExecutor(Properties properties) throws Exception{
+		
+		AbstractTestExecutor testExecutor;
+		
+		if(!properties.containsKey("test_script")) throw new Exception("Parameter 'test_script' not found in properties");
+		String testScript = properties.getProperty("test_script");
+		
+		switch(TestScript.valueOf(testScript)){
+            case ANT:
+                if(!properties.containsKey("ant_base_dir")) throw new Exception("Parameter 'ant_base_dir' not found in properties");
+                if(!properties.containsKey("ant_path")) throw new Exception("Parameter 'ant_path' not found in properties");
+                if(!properties.containsKey("ant_test_target")) throw new Exception("Parameter 'ant_test_target' not found in properties");
+
+                testExecutor = new AntTestExecutor(new File(properties.getProperty("ant_base_dir")), 
+                                                   properties.getProperty("ant_path"), 
+                                                   properties.getProperty("ant_test_target"));
+            	break;
+            case BASH:
+                if(!properties.containsKey("bash_script_base_dir")) throw new Exception("Parameter 'bash_script_base_dir' not found in properties");
+                if(!properties.containsKey("bash_script_path")) throw new Exception("Parameter 'bash_script_path' not found in properties");
+                
+                testExecutor = new BashTestExecutor(new File(properties.getProperty("bash_script_base_dir")),
+                									properties.getProperty("bash_script_path"));
+            	break;
+			default:
+				throw new Exception("Unknown test script type: " + testScript);
+		}
+		
+		return testExecutor;
 	}
 	
 	/**
@@ -123,4 +157,6 @@ public class SampleUse {
 
 		return unpacked;
 	}
+	
+	private enum TestScript { ANT, BASH }
 }

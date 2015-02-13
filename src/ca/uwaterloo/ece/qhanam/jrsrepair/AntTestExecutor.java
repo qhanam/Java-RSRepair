@@ -5,20 +5,18 @@ import java.io.File;
 import java.io.InputStreamReader;
 
 /**
- * TestExecutor compiles and runs the JUnit tests for the program under repair.
- * 
- * TODO: Since different programs have different builds, this class should be
- * 		 an interface or abstract (e.g., AntTestExecutor).
+ * AntTestExecutor compiles and runs the JUnit tests for the program under repair using
+ * Apache Ant and a build.xml build file.
  * 
  * @author qhanam
  */
-public class TestExecutor {
+public class AntTestExecutor extends AbstractTestExecutor {
 	
 	private File baseDirectory;
 	private String antPath;
 	private String antTestTarget;
 
-	public TestExecutor(File baseDirectory, String antPath, String antTestTarget){
+	public AntTestExecutor(File baseDirectory, String antPath, String antTestTarget){
 		this.baseDirectory = baseDirectory;
 		this.antPath = antPath;
 		this.antTestTarget = antTestTarget;

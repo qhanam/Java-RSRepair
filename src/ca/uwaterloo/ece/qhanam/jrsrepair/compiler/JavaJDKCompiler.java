@@ -56,7 +56,6 @@ public class JavaJDKCompiler {
 	    this.mcl = new MemoryClassLoader(sourceMap, this.classpath, output);
 
 	    /* Check the compilation went ok. */
-	    //System.out.println(output.toString());
 	    if(output.toString().matches("(?s).*\\d+ errors?.*")){
 	    	this.errors.add(output.toString());
 	    	return TestStatus.NOT_COMPILED;

@@ -51,6 +51,7 @@ public class TestExecutor {
           
           /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
           if(output.indexOf("BUILD SUCCESSFUL") >= 0) return JRSRepair.TestStatus.TESTS_PASSED;
+          if(output.indexOf("BUILD FAILED") >= 0) return JRSRepair.TestStatus.TESTS_FAILED;
 
         }catch(InterruptedException e){ 
           System.out.println("Interrupted Exception during JUnit run.");
@@ -58,6 +59,6 @@ public class TestExecutor {
         }
 
         /* The program compiled, but failed one or more test cases. */
-        return JRSRepair.TestStatus.TESTS_FAILED;
+        return JRSRepair.TestStatus.TEST_ERROR;
 	}
 }

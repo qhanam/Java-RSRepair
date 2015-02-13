@@ -226,6 +226,7 @@ public class JRSRepair {
                 if(compiled == TestStatus.NOT_COMPILED) {
                     System.out.print(" - Did not compile\n");
                     mutation.undo(); 
+                    mutation = null;
                 } else {
                     this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
                     System.out.print(" - Compiled!");
@@ -242,7 +243,8 @@ public class JRSRepair {
             this.logSuccesfullPatch(candidate, generation);
             System.out.print(" Passed!\n");
         }
-        else if(compiled == TestStatus.TESTS_FAILED) System.out.print("\n");
+        else if(compiled == TestStatus.TESTS_FAILED) System.out.print(" Failed.\n");
+        else if(compiled == TestStatus.TEST_ERROR) System.out.print(" Error - tests may not have run.\n");
     
         /* Recurse to the next level of mutations. */
         if(generation < this.mutationGenerations){ 
@@ -253,6 +255,7 @@ public class JRSRepair {
         if(compiled == TestStatus.TESTS_FAILED || compiled == TestStatus.TESTS_PASSED) {
             this.patches.pop();
             mutation.undo();
+            mutation = null;
         }
 	}
 	
@@ -292,6 +295,9 @@ public class JRSRepair {
 		SourceStatement faultyStatement;
 		Mutation mutation;
 		if(this.currentMutation == null) this.currentMutation = (new Double(Math.ceil((this.random.nextDouble() * 3)))).intValue();
+		
+		// Uncomment for debugging program compilation
+		//this.currentMutation = 100;
 		
 		switch(this.currentMutation){
 		case 100: // Use for testing (e.g., to make sure the program compiles without mutations).
@@ -417,7 +423,7 @@ public class JRSRepair {
 	 * Used for keeping track of compilation and test progress.
 	 */
 	public enum TestStatus{
-		NOT_COMPILED, COMPILED, TESTS_FAILED, TESTS_PASSED
+		NOT_COMPILED, COMPILED, TESTS_FAILED, TESTS_PASSED, TEST_ERROR
 	}
 
 	/**

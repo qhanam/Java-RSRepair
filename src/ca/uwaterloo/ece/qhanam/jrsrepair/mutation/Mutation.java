@@ -68,6 +68,9 @@ public abstract class Mutation {
 		/* Undo the operation applied to the AST. */
 		this.concreteUndo();
 		
+		/* Set the status to not mutated. */
+		this.mutated = false;
+		
 		/* Relinquish use of the statements. */
 		this.faulty.inUse = false;
 		if(this.seed != null) this.seed.inUse = false;

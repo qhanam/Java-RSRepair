@@ -32,9 +32,10 @@ public class MemoryClassLoader extends ClassLoader {
         }
         
         List<String> optionList = new ArrayList<String>();
-        // set compiler's classpath to be same as the runtime's
+
         optionList.add("-classpath");
         optionList.add(StringUtils.join(classpath, ":"));
+        optionList.add("-nowarn");
 
         this.compiler.getTask(output, this.manager, null, optionList, null, list).call();
     }

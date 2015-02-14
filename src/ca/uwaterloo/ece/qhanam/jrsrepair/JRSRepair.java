@@ -247,6 +247,7 @@ public class JRSRepair {
                     mutation.undo(); 
                     mutation = null;
                 } else if(compiled == TestStatus.NOT_COMPILED) {
+                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
                     System.out.print(" - Did not compile\n");
                 } else {
                     this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
@@ -275,7 +276,7 @@ public class JRSRepair {
         }
 
         /* Since this.patches in a field, we need to unwind the patch stack. */
-        if(compiled == TestStatus.TESTS_FAILED || compiled == TestStatus.TESTS_PASSED) {
+        if(compiled == TestStatus.TESTS_FAILED || compiled == TestStatus.TESTS_PASSED || (compiled == TestStatus.NOT_COMPILED && !this.revertFailedCompile)) {
             this.patches.pop();
             mutation.undo();
             mutation = null;

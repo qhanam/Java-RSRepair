@@ -37,11 +37,20 @@ public class AntTestExecutor extends AbstractTestExecutor {
         BufferedReader stdInput = new BufferedReader(new 
                    InputStreamReader(process.getInputStream()));
 
+        BufferedReader stdError = new BufferedReader(new 
+            InputStreamReader(process.getErrorStream()));
+
         /* Read the output from the command. */
         String output = "";
         String s = null;
         while ((s = stdInput.readLine()) != null) {
             output += s;
+        }
+
+        String errors = "";
+        s = null;
+        while ((s = stdError.readLine()) != null) {
+            errors += s;
         }
         
         try{
@@ -49,7 +58,7 @@ public class AntTestExecutor extends AbstractTestExecutor {
           
           /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
           if(output.indexOf("BUILD SUCCESSFUL") >= 0) return JRSRepair.TestStatus.TESTS_PASSED;
-          if(output.indexOf("BUILD FAILED") >= 0) return JRSRepair.TestStatus.TESTS_FAILED;
+          if(errors.indexOf("BUILD FAILED") >= 0) return JRSRepair.TestStatus.TESTS_FAILED;
 
         }catch(InterruptedException e){ 
           System.out.println("Interrupted Exception during JUnit run.");

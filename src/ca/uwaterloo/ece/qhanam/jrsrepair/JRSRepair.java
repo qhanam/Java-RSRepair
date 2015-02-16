@@ -43,10 +43,6 @@ public class JRSRepair {
 	private LineCoverage faultyLineCoverage;
 	private LineCoverage seedLineCoverage;
 
-	private int mutationCandidates;
-	private int mutationGenerations;
-	private int mutationAttempts;
-	
 	private Random random;
 	
 	private JavaJDKCompiler compiler;
@@ -58,6 +54,9 @@ public class JRSRepair {
 	private ASTParser parser;
 	
 	private boolean revertFailedCompile;
+	
+	/* TODO: Should be the only member variable we need... */
+	private Context context;
 	
 	/* currentMutation is used to keep track of what mutation has been chosen for a 
 	 * mutation generation. This is needed because some mutations are more likely to
@@ -74,10 +73,9 @@ public class JRSRepair {
 	 * @param sourcepaths The path to the source folder of the program we are mutating.
 	 */
 	public JRSRepair(String[] sourcepaths, String[] classpaths, File faultyCoverageFile, File seedCoverageFile, 
-					 int mutationCandidates, int mutationGenerations, int mutationAttempts, 
 					 long randomSeed, File buildDirectory, JavaJDKCompiler compiler, 
 					 AbstractTestExecutor testExecutor, String[] classDirectories,
-					 boolean revertFailedCompile) throws Exception {
+					 boolean revertFailedCompile, Context context) throws Exception {
 
 		this.scope = new HashMap<String, HashSet<String>>();
 		
@@ -90,10 +88,6 @@ public class JRSRepair {
 		this.sourcepaths = sourcepaths;
 		this.faultyCoverageFile = faultyCoverageFile;
 		this.seedCoverageFile = seedCoverageFile;
-		
-		this.mutationCandidates = mutationCandidates;
-		this.mutationGenerations = mutationGenerations;
-		this.mutationAttempts = mutationAttempts;
 		
 		this.compiler = compiler;
 		this.testExecutor = testExecutor;
@@ -122,6 +116,8 @@ public class JRSRepair {
 		this.currentMutation = null;
 		
 		this.parser = null; // Initialize to null since all the parsing is done in buildASTs();
+		
+		this.context = context;
 	}
 	
 	/**
@@ -139,7 +135,7 @@ public class JRSRepair {
 		 * String[] encodings,
 		 * boolean includeRunningVMBootclasspath) */
 		parser.setEnvironment(this.classpaths, this.sourcepaths, null, true); 
-		parser.setResolveBindings(true); // ISSUE: Throws an error when set to 'true' for some reason. SOLVED: was passing list of source files, not the source directory.
+		parser.setResolveBindings(true);
 		
 		/* Set up the AST handler. We need to create LineCoverage and Statements classes to store 
 		 * and filter the statements from the ASTs. */
@@ -162,7 +158,7 @@ public class JRSRepair {
 		if(this.sourceFileContents.isEmpty() || this.faultyStatements.isEmpty() || this.seedStatements.isEmpty()) throw new Exception("The ASTs have not been built.");
 		
 		try{
-			for(int i = 0; i < this.mutationCandidates; i++) {
+			for(int i = 0; i < this.context.repairContext().candidates(); i++) {
 				System.out.println("Running candidate " + (i + 1) + " ...");
                 this.mutationIteration(i + 1, 1);
 			}
@@ -215,7 +211,7 @@ public class JRSRepair {
                 /* Check if all the variables are in scope in the new AST. */
             } while(!this.checkScope(mutation.getRewriter()));
             
-            this.logMutation(mutation);
+            this.logMutation(mutation, candidate, generation);
             
             /* Now that we have a mutation that is in-scope, we attempt to compile 
              * the program. If the program compiles, we run the test cases. If it
@@ -257,7 +253,7 @@ public class JRSRepair {
 
             attemptCounter++;
 
-        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.mutationAttempts);
+        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.context.repairContext().attempts());
         
         this.currentMutation = null;
         
@@ -271,7 +267,7 @@ public class JRSRepair {
         	System.out.print(" Error - tests may not have run.\n");
     
         /* Recurse to the next level of mutations. */
-        if(generation < this.mutationGenerations){ 
+        if(generation < this.context.repairContext().generations()){ 
             this.mutationIteration(candidate, generation + 1);
         }
 
@@ -433,10 +429,11 @@ public class JRSRepair {
      * Temp method for debugging.
 	 * @throws Exception
 	 */
-	public void logMutation(Mutation m) throws Exception{
+	public void logMutation(Mutation m, int candidate, int generation) throws Exception{
 		try{
 			Utilities.writeToFileAppend(new File(this.buildDirectory + "/log"), 
-									   m.toString().getBytes());
+									   ("Candidate " + candidate + ", Generation" + generation 
+									   + "\n" + m.toString()).getBytes());
 		} catch (Exception e){
 			System.out.println(e.getMessage());
 			throw e;

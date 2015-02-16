@@ -98,12 +98,14 @@ public class SampleUse {
          * 	JavaJDKCompiler - runs javac to compile the mutated source (doesn't actually use JDT compiler)
          * 	JRSRepair - mutates the source code and oversees the compilation and test execution
          */
+        
+        Context context = ContextFactory.buildContext(properties);
 		
         testExecutor = SampleUse.buildTestExecutor(properties);
         compiler = new JavaJDKCompiler(classDirectory, classPath);
         repair = new JRSRepair(sourcePath, classPath, faultyCoverage, seedCoverage, 
-                                 mutationCandidates, mutationGenerations, mutationAttempts, randomSeed, 
-                                 buildDirectory, compiler, testExecutor, classDirectories, revertFailedCompile);
+                                 randomSeed, 
+                                 buildDirectory, compiler, testExecutor, classDirectories, revertFailedCompile, context);
 
 		return repair;
 	}

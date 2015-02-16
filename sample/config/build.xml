@@ -118,7 +118,7 @@
 			<format property="FILE_NAME" pattern="yyyyMMddHHmmssSSS"/>
 		</tstamp>
 		<echo> the current time is ${FILE_NAME}</echo>
-		<junit printsummary="yes" haltonfailure="no" showoutput="yes">
+		<junit printsummary="yes" haltonfailure="yes" showoutput="yes">
 			<formatter type="brief"/>
 			<classpath>
 				<pathelement location="${build.classes}"/>

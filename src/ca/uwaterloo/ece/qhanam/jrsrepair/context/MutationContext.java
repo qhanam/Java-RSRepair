@@ -1,8 +1,11 @@
-package ca.uwaterloo.ece.qhanam.jrsrepair;
+package ca.uwaterloo.ece.qhanam.jrsrepair.context;
 
 import java.util.HashMap;
 import java.util.Random;
 
+import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
+import ca.uwaterloo.ece.qhanam.jrsrepair.SourceStatement;
+import ca.uwaterloo.ece.qhanam.jrsrepair.Statements;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.Mutation;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.NullMutation;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.AdditionMutation;

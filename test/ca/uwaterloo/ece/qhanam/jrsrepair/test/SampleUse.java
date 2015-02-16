@@ -6,6 +6,8 @@ import java.util.Properties;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.*;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
+import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
+import ca.uwaterloo.ece.qhanam.jrsrepair.context.ContextFactory;
 
 /**
  * This class implements a program that attempts to automatically fix a
@@ -50,16 +52,6 @@ public class SampleUse {
         File faultyCoverage = new File(properties.getProperty("faulty_coverage"));
         File seedCoverage = new File(properties.getProperty("faulty_coverage"));
         
-        /* Get the settings for mutant generation. */
-
-		if(!properties.containsKey("mutation_candidates")) throw new Exception("Parameter 'mutation_candidates' not found in properties");
-		if(!properties.containsKey("mutation_generations")) throw new Exception("Parameter 'mutation_generations' not found in properties");
-		if(!properties.containsKey("mutation_attempts")) throw new Exception("Parameter 'mutation_attempts' not found in properties");
-	
-        int mutationCandidates = Integer.parseInt(properties.getProperty("mutation_candidates"));
-        int mutationGenerations = Integer.parseInt(properties.getProperty("mutation_generations"));
-        int mutationAttempts = Integer.parseInt(properties.getProperty("mutation_attempts")); 
-
         /* Get the location for the log files and class files. */
 
 		if(!properties.containsKey("build_directory")) throw new Exception("Parameter 'build_directory' not found in properties");

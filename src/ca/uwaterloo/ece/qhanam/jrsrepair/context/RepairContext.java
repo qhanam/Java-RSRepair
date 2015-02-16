@@ -1,4 +1,4 @@
-package ca.uwaterloo.ece.qhanam.jrsrepair;
+package ca.uwaterloo.ece.qhanam.jrsrepair.context;
 
 /**
  * Holds the context for the main repair operation.

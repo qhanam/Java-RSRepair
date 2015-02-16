@@ -23,14 +23,11 @@ public class JavaJDKCompiler {
 	private String[] classpath;
 	private Queue<String> errors;
 	
-	public JavaJDKCompiler(String classDirectory, String[] classpath){
+	public JavaJDKCompiler(String classDirectory, String[] classpath, Map<String, DocumentASTRewrite> sourceFileContents, String[] sourcePaths){
 		this.classDirectory = classDirectory;
 		this.classpath = classpath;
 		this.mcl = null;
 		this.errors = new LinkedList<String>();
-	}
-	
-	public void setContext(Map<String, DocumentASTRewrite> sourceFileContents, String[] sourcePaths){
 		this.sourceFileContents = sourceFileContents;
 		this.sourcePaths = sourcePaths;
 	}
@@ -87,8 +84,7 @@ public class JavaJDKCompiler {
 	}
 	
 	/**
-	 * Writes the source file changes back to disk. Only writes the documents that are marked
-	 * as tainted.
+	 * Build the map of source files that the compiler will read from.
 	 * @throws Exception
 	 */
 	private Map<String, String> buildSourceMap() throws Exception{

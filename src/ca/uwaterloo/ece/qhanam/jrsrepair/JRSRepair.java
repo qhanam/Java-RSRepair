@@ -20,6 +20,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
+import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
@@ -158,7 +159,7 @@ public class JRSRepair {
 		if(this.sourceFileContents.isEmpty() || this.faultyStatements.isEmpty() || this.seedStatements.isEmpty()) throw new Exception("The ASTs have not been built.");
 		
 		try{
-			for(int i = 0; i < this.context.repairContext().candidates(); i++) {
+			for(int i = 0; i < this.context.repair.candidates(); i++) {
 				System.out.println("Running candidate " + (i + 1) + " ...");
                 this.mutationIteration(i + 1, 1);
 			}
@@ -253,7 +254,7 @@ public class JRSRepair {
 
             attemptCounter++;
 
-        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.context.repairContext().attempts());
+        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.context.repair.attempts());
         
         this.currentMutation = null;
         
@@ -267,7 +268,7 @@ public class JRSRepair {
         	System.out.print(" Error - tests may not have run.\n");
     
         /* Recurse to the next level of mutations. */
-        if(generation < this.context.repairContext().generations()){ 
+        if(generation < this.context.repair.generations()){ 
             this.mutationIteration(candidate, generation + 1);
         }
 

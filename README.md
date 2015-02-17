@@ -31,7 +31,7 @@ java ca.uwaterloo.ece.qhanam.jrsrepair.test.SampleUse /path/to/jrsrepair.propert
 * `sample\src`: The sample program under test (an LRU cache implementation)
 * `sample\test`: The JUnit test cases for the sample program under test
 * `sample\config`: The JRSRepair configuration files for repairing the sample program. This includes:
-* * `jrsrepair.properties`: The configuration file
-* * `faulty.cov`: The code coverage file for potentially faulty statements to mutate.
-* * `seed.cov`: The code coverage file for seed statements to perform the mutations with.
-* * `build.xml`: The Apache Ant build script that runs the JUnit tests for the sample program.
+    * `jrsrepair.properties`: The configuration file
+    * `faulty.cov`: The code coverage file for potentially faulty statements to mutate.
+    * `seed.cov`: The code coverage file for seed statements to perform the mutations with.
+    * `build.xml`: The Apache Ant build script that runs the JUnit tests for the sample program.

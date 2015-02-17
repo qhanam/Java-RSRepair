@@ -58,6 +58,7 @@ public class JavaJDKCompiler {
 	    }
 	    
 	    /* Write the class files to disk. */
+	    this.errors.add("Compiled");
 	    this.storeCompiled(this.classDirectory);
         return Status.COMPILED;
 	}
@@ -80,6 +81,18 @@ public class JavaJDKCompiler {
 	    }catch (Exception e){
 	    	System.out.println(e.getMessage());
 	    }
+	}
+	
+	/**
+	 * Returns the error message at the head of the queue.
+	 * 
+	 * Recommended use is to dequeue after each compile, or
+	 * wait until execution has finished and iterate through
+	 * the queue.
+	 * @return
+	 */
+	public String dequeueCompileError() {
+		return this.errors.remove();
 	}
 	
 	/**

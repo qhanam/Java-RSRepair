@@ -137,6 +137,8 @@ public class JRSRepair {
 
             compileStatus = this.context.compiler.compile();
             
+            this.logCompileError(candidate, generation, this.context.compiler.dequeueCompileError());
+            
             /* Did it compile? If it didn't we might need to undo the mutation before trying again.
              * Either way, log what happened. */
             if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED && this.context.repair.revertFailedCompile) {
@@ -225,14 +227,15 @@ public class JRSRepair {
 	 * @throws Exception
 	 */
 	public void logMutation(Mutation m, int candidate, int generation) throws Exception{
-		try{
-			Utilities.writeToFileAppend(new File(this.context.repair.buildDirectory + "/log"), 
-									   ("Candidate " + candidate + ", Generation" + generation 
-									   + "\n" + m.toString()).getBytes());
-		} catch (Exception e){
-			System.out.println(e.getMessage());
-			throw e;
-		}
+        Utilities.writeToFileAppend(new File(this.context.repair.buildDirectory + "/mutation-log"), 
+                                   ("Candidate " + candidate + ", Generation" + generation 
+                                   + "\n" + m.toString()).getBytes());
+	}
+	
+	public void logCompileError(int candidate, int generation, String message) throws Exception {
+        Utilities.writeToFileAppend(new File(this.context.repair.buildDirectory + "/compile-log"), 
+                                   ("Candidate " + candidate + ", Generation" + generation 
+                                   + "\n" + message + "\n********************\n").getBytes());
 	}
 	
 }

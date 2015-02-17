@@ -21,7 +21,7 @@ public class TestContext {
 	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
-	public JRSRepair.TestStatus runTests() throws Exception {
+	public AbstractTestExecutor.Status runTests() throws Exception {
 		return this.testExecutor.runTests();
 	}
 

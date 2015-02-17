@@ -27,7 +27,7 @@ public class AntTestExecutor extends AbstractTestExecutor {
 	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
-	public JRSRepair.TestStatus runTests() throws Exception{
+	public Status runTests() throws Exception{
 	    
 	    /* The program has successfully compiled, so run the JUnit tests. */
         ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
@@ -57,8 +57,8 @@ public class AntTestExecutor extends AbstractTestExecutor {
           process.waitFor();
           
           /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return JRSRepair.TestStatus.TESTS_PASSED;
-          if(errors.indexOf("BUILD FAILED") >= 0) return JRSRepair.TestStatus.TESTS_FAILED;
+          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return Status.PASSED;
+          if(errors.indexOf("BUILD FAILED") >= 0) return Status.FAILED;
 
         }catch(InterruptedException e){ 
           System.out.println("Interrupted Exception during JUnit run.");
@@ -66,6 +66,6 @@ public class AntTestExecutor extends AbstractTestExecutor {
         }
 
         /* The program compiled, but failed one or more test cases. */
-        return JRSRepair.TestStatus.TEST_ERROR;
+        return Status.ERROR;
 	}
 }

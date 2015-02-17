@@ -19,5 +19,12 @@ public abstract class AbstractTestExecutor {
 	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
-	public abstract JRSRepair.TestStatus runTests() throws Exception;
+	public abstract Status runTests() throws Exception;
+	
+	/**
+	 * The possible results from runTests()
+	 */
+	public enum Status{
+		FAILED, PASSED, ERROR
+	}
 }

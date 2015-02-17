@@ -25,7 +25,7 @@ public class BashTestExecutor extends AbstractTestExecutor {
 	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
-	public JRSRepair.TestStatus runTests() throws Exception{
+	public Status runTests() throws Exception{
 	    
 	    /* The program has successfully compiled, so run the JUnit tests. */
         ProcessBuilder builder = new ProcessBuilder(this.scriptPath);
@@ -47,8 +47,8 @@ public class BashTestExecutor extends AbstractTestExecutor {
           
           /* JUnit will output "FAILURES!!!" if one or more tests fail or error out.
            * If we want more details, we can look for this message: "Tests run: 4,  Failures: 1,  Errors: 0" */
-          if(output.indexOf("FAILURES!!!") >= 0) return JRSRepair.TestStatus.TESTS_FAILED;
-          else return JRSRepair.TestStatus.TESTS_PASSED;
+          if(output.indexOf("FAILURES!!!") >= 0) return Status.FAILED;
+          else return Status.PASSED;
 
         }catch(InterruptedException e){ 
           System.out.println("Interrupted Exception during JUnit run.");

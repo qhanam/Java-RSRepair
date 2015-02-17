@@ -10,7 +10,6 @@ import java.util.Queue;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.DocumentASTRewrite;
 import ca.uwaterloo.ece.qhanam.jrsrepair.Utilities;
-import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair.TestStatus;
 
 /**
  * From https://weblogs.java.net/blog/malenkov/archive/2008/12/how_to_compile.html
@@ -42,7 +41,7 @@ public class JavaJDKCompiler {
 	 * @return JRSRepair.TestStatus (NOT_COMPILED or COMPILED)
 	 * @throws Exception
 	 */
-	public TestStatus compile() throws Exception{
+	public Status compile() throws Exception{
 		StringWriter output = new StringWriter();
 		
 		/* Build the map of source files that the compiler will read from. The
@@ -55,12 +54,12 @@ public class JavaJDKCompiler {
 	    /* Check the compilation went ok. */
 	    if(output.toString().matches("(?s).*\\d+ errors?.*")){
 	    	this.errors.add(output.toString());
-	    	return TestStatus.NOT_COMPILED;
+	    	return Status.NOT_COMPILED;
 	    }
 	    
 	    /* Write the class files to disk. */
 	    this.storeCompiled(this.classDirectory);
-        return TestStatus.COMPILED;
+        return Status.COMPILED;
 	}
 	
 	/**
@@ -143,5 +142,12 @@ public class JavaJDKCompiler {
 	      }
 	      return false;
 	  }
+
+	/**
+	 * The possible results from the compile method.
+	 */
+	public enum Status{
+		NOT_COMPILED, COMPILED
+	}
 	
 }

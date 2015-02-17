@@ -1,6 +1,5 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.context;
 
-import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair.TestStatus;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 
 /**
@@ -18,7 +17,7 @@ public class CompilerContext {
 		this.compiler = compiler;
 	}
 	
-	public TestStatus compile() throws Exception{
+	public JavaJDKCompiler.Status compile() throws Exception{
 		return this.compiler.compile();
 	}
 	

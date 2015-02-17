@@ -98,22 +98,21 @@ public class JRSRepair {
         MutationContext.MutationType mutationType = this.context.mutation.getRandomMutationType(); 
 
         Mutation mutation = null;
-        TestStatus compiled = TestStatus.NOT_COMPILED;
+        JavaJDKCompiler.Status compileStatus;
+        AbstractTestExecutor.Status testStatus;
         
-        /* We need to ensure the first levels compile or else the rest of the
-         * mutations won't be useful. */
+        /* The compiler loop. Attempt to compile until the counter reaches max
+         * attempts set by the user. */
         do {
-            compiled = TestStatus.NOT_COMPILED;
             
             /* First we need to get a mutation that will likely compile. To do this
              * we randomly select a mutation, apply the mutation to the AST to get
              * a new document, parse the new document into an AST (having the parser
              * attempt to resolve bindings) and finally check that all variables have
              * bindings.*/
+        	int ctr = 0;
+            while(true){
 
-            do{
-            	if(mutation != null && mutation.mutated()) mutation.undo();
-            	
                 /* Get a random mutation operation to apply. */
                 mutation = this.context.mutation.getRandomMutation(mutationType);
                 
@@ -121,7 +120,14 @@ public class JRSRepair {
                 mutation.mutate();
                 
                 /* Check if all the variables are in scope in the new AST. */
-            } while(!this.context.parser.checkScope(mutation.getRewriter()));
+                if(this.context.parser.checkScope(mutation.getRewriter())) break;
+                
+                mutation.undo();
+                
+                /* Just in case... we should make sure we don't have an infinite loop. */
+                ctr++;
+                if(ctr > 1000) throw new Exception("Mutation search timed out after 1000 attempts without a passing scope check.");
+            }
             
             this.logMutation(mutation, candidate, generation);
             
@@ -129,52 +135,51 @@ public class JRSRepair {
              * the program. If the program compiles, we run the test cases. If it
              * doesn't, we roll back the changes and loop to get another mutation. */
 
-            compiled = this.context.compiler.compile();
+            compileStatus = this.context.compiler.compile();
             
-            try{
-                /* Did the program compile? If it did, run the test cases. 
-                 * We may also need to copy the .class files back to their 
-                 * class folders (for example, if we have a complex Maven
-                 * this just makes life easier than re-building ourselves). */
-                if(compiled == TestStatus.COMPILED){
-                	if(this.context.repair.classDirectories.length > 0){
-                		for(String directory : this.context.repair.classDirectories){
-                			Utilities.copyFiles(new File(this.context.repair.buildDirectory.getPath() + "/classes"), new File(directory));
-                		}
-                	}
-                	compiled = this.context.test.runTests();
-                }
-            } catch (Exception e){
-                System.err.println("JRSRepair: Exception thrown during test execution.");
-                System.err.println(e.getMessage());
-            }
-            finally { 
-                /* Roll back the current mutation. */
-                if(compiled == TestStatus.NOT_COMPILED && this.context.repair.revertFailedCompile) {
-                    System.out.print(" - Did not compile\n");
-                    mutation.undo(); 
-                    mutation = null;
-                } else if(compiled == TestStatus.NOT_COMPILED) {
-                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                    System.out.print(" - Did not compile\n");
-                } else {
-                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                    System.out.print(" - Compiled!");
-                }
+            /* Did it compile? If it didn't we might need to undo the mutation before trying again.
+             * Either way, log what happened. */
+            if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED && this.context.repair.revertFailedCompile) {
+                System.out.print(" - Did not compile\n");
+                mutation.undo(); 
+            } else if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED) {
+                this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                System.out.print(" - Did not compile\n");
+            } else {
+                this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                System.out.print(" - Compiled!");
             }
 
             attemptCounter++;
 
-        } while(compiled == TestStatus.NOT_COMPILED && attemptCounter < this.context.repair.attempts);
-        
-        if(compiled == TestStatus.TESTS_PASSED) {
-            this.logSuccesfullPatch(candidate, generation);
-            System.out.print(" Passed!\n");
+        } while(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED && attemptCounter < this.context.repair.attempts);
+
+        /* Did the program compile? If it did, run the test cases. */
+        if(compileStatus == JavaJDKCompiler.Status.COMPILED){
+
+        	/* We may also need to copy the .class files back to their 
+             * class folders (for example, if we have a complex Maven
+             * this just makes life easier than re-building ourselves). */
+            if(this.context.repair.classDirectories.length > 0){
+                for(String directory : this.context.repair.classDirectories){
+                    Utilities.copyFiles(new File(this.context.repair.buildDirectory.getPath() + "/classes"), new File(directory));
+                }
+            }
+
+            /* Run the test cases. */
+            testStatus = this.context.test.runTests();
+
+            /* Log what happened. If all tests passed, store the class files. */
+            if(testStatus == AbstractTestExecutor.Status.PASSED) {
+                this.logSuccesfullPatch(candidate, generation);
+                System.out.print(" Passed!\n");
+            }
+            else if(testStatus == AbstractTestExecutor.Status.FAILED) 
+                System.out.print(" Failed.\n");
+            else if(testStatus == AbstractTestExecutor.Status.ERROR) 
+                System.out.print(" Error - tests may not have run.\n");
         }
-        else if(compiled == TestStatus.TESTS_FAILED) 
-        	System.out.print(" Failed.\n");
-        else if(compiled == TestStatus.TEST_ERROR) 
-        	System.out.print(" Error - tests may not have run.\n");
+        
     
         /* Recurse to the next level of mutations. */
         if(generation < this.context.repair.generations){ 
@@ -182,10 +187,9 @@ public class JRSRepair {
         }
 
         /* Since this.patches in a field, we need to unwind the patch stack. */
-        if(compiled == TestStatus.TESTS_FAILED || compiled == TestStatus.TESTS_PASSED || (compiled == TestStatus.NOT_COMPILED && !this.context.repair.revertFailedCompile)) {
+        if(compileStatus == JavaJDKCompiler.Status.COMPILED || !this.context.repair.revertFailedCompile) {
             this.patches.pop();
             mutation.undo();
-            mutation = null;
         }
 	}
 	
@@ -231,10 +235,4 @@ public class JRSRepair {
 		}
 	}
 	
-	/**
-	 * Used for keeping track of compilation and test progress.
-	 */
-	public enum TestStatus{
-		NOT_COMPILED, COMPILED, TESTS_FAILED, TESTS_PASSED, TEST_ERROR
-	}
 }

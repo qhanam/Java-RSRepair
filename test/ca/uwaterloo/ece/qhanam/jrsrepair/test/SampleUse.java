@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.util.Properties;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.*;
-import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.ContextFactory;
 

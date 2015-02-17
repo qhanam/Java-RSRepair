@@ -1,7 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.context;
 
 import ca.uwaterloo.ece.qhanam.jrsrepair.AbstractTestExecutor;
-import ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepair;
 
 /**
  * TestContext stores the context for running an AbstractTestExecutor.

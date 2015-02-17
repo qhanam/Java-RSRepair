@@ -1,9 +1,5 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-
 /**
  * TestExecutor specifies the interface to test the program under repair.
  * 

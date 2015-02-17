@@ -123,17 +123,30 @@ public class ContextFactory {
 													throws Exception {
 		
         /* Get the settings for mutant generation. */
-
 		if(!properties.containsKey("mutation_candidates")) throw new Exception("Parameter 'mutation_candidates' not found in properties");
 		if(!properties.containsKey("mutation_generations")) throw new Exception("Parameter 'mutation_generations' not found in properties");
 		if(!properties.containsKey("mutation_attempts")) throw new Exception("Parameter 'mutation_attempts' not found in properties");
-	
         int mutationCandidates = Integer.parseInt(properties.getProperty("mutation_candidates"));
         int mutationGenerations = Integer.parseInt(properties.getProperty("mutation_generations"));
         int mutationAttempts = Integer.parseInt(properties.getProperty("mutation_attempts")); 
+
+        /* Get the location for the log files and class files. */
+		if(!properties.containsKey("build_directory")) throw new Exception("Parameter 'build_directory' not found in properties");
+    	File buildDirectory = new File(properties.getProperty("build_directory"));
+
+    	/* revertFailedCompile is optional (defaults to false). If true, if a compile fails, the last mutation is
+    	 * undone before moving on to the next candidate. GenProg and JRSRepair's functionality would have this
+    	 * setting false because they build patches BEFORE they execute them. */
+    	boolean revertFailedCompile = false;
+    	if(properties.containsKey("revert_failed_compile")) revertFailedCompile = Boolean.parseBoolean(properties.getProperty("revert_failed_compile"));
+
+    	/* classdirectories is optional (for multiple output directories) */
+    	String[] classDirectories;
+    	if(properties.containsKey("class_destination_directories")) classDirectories = unpackArray(properties.getProperty("class_destination_directories"));
+    	else classDirectories = new String[] {};
         
         /* Build a RepairContext object. */
-        return new RepairContext(mutationCandidates, mutationGenerations, mutationAttempts);
+        return new RepairContext(mutationCandidates, mutationGenerations, mutationAttempts, buildDirectory, revertFailedCompile, classDirectories);
 	}
 	
 	/**

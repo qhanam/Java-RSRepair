@@ -43,6 +43,7 @@ public class ParserContext {
 		this.parser = ASTParser.newParser(AST.JLS8);
 
     	this.scope = scope;
+    	this.sourceFileContents = sourceFileContents;
     	this.classpaths = classpaths;
     	this.sourcepaths = sourcepaths;
     	this.sourceFilesArray = sourceFilesArray;

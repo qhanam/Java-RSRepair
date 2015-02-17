@@ -51,19 +51,9 @@ public class MutationContext {
 	 * 
 	 * @return A Mutation memento object for applying one mutation to a faulty statement.
 	 */
-	public Mutation getRandomMutation() throws Exception {
-		return getRandomMutation(null);
-	}
-
-	/**
-	 * Returns a random mutation operation.
-	 * 
-	 * @return A Mutation memento object for applying one mutation to a faulty statement.
-	 */
 	public Mutation getRandomMutation(MutationType type) throws Exception {
 		SourceStatement faultyStatement;
 		Mutation mutation;
-		if(type == null) type = MutationType.values()[(new Double(Math.ceil((this.random.nextDouble() * (MutationType.values().length - 1))))).intValue()];
 		
 		switch(type){
 		case NULL: // Use for testing (e.g., to make sure the program compiles without mutations).
@@ -90,12 +80,23 @@ public class MutationContext {
 		
 		return mutation;
 	}
+
+	/**
+	 * Returns a random mutation type.
+	 * 
+	 * NOTE: Will never return NULL mutation type.
+	 * 
+	 * @return A MutationType that can be passed to getRandomMutation.
+	 */
+	public MutationType getRandomMutationType() throws Exception {
+		return MutationType.values()[(new Double(Math.ceil((this.random.nextDouble() * (MutationType.values().length - 1))))).intValue()];
+	}
 	
 	public enum MutationType {
+		NULL, // Must be manually selected (won't be selected randomly in getRandomMutation)
 		ADDITION,
 		REPLACEMENT,
-		DELETION,
-		NULL // Must be manually selected (won't be selected randomly in getRandomMutation)
+		DELETION
 	}
 
 }

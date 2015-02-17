@@ -1,5 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.context;
 
+import java.io.File;
+
 /**
  * Holds the context for the main repair operation.
  * 
@@ -7,18 +9,20 @@ package ca.uwaterloo.ece.qhanam.jrsrepair.context;
  */
 public class RepairContext {
 
-	private int numCandidates; 		// The number of candidates to attempt
-	private int numGenerations; 	// The number of generations for each candidate
-	private int numAttempts; 		// The number of compilation attempts before moving on to the next generation or candidate.
+	public int candidates; 				// The number of candidates to attempt
+	public int generations; 			// The number of generations for each candidate
+	public int attempts; 				// The number of compilation attempts before moving on to the next generation or candidate.
+	public File buildDirectory;			// The directory for the class files, log files and patches
+	public boolean revertFailedCompile;	// Should we undo mutations that don't compile right away?
+	public String[] classDirectories;	// OPTIONAL - If there are multiple output directories, specify them here (class files will be copied back).
 	
-	public RepairContext(int candidates, int generations, int attempts){
-		this.numCandidates = candidates;
-		this.numGenerations = generations;
-		this.numAttempts = attempts;
+	public RepairContext(int candidates, int generations, int attempts, File buildDirectory, boolean revertFailedCompile, String[] classDirectories){
+		this.candidates = candidates;
+		this.generations = generations;
+		this.attempts = attempts;
+		this.buildDirectory = buildDirectory;
+		this.revertFailedCompile = revertFailedCompile;
+		this.classDirectories = classDirectories;
 	}
-	
-	public int candidates() { return this.numCandidates; }
-	public int generations() { return this.numGenerations; }
-	public int attempts() { return this.numAttempts; }
 	
 }

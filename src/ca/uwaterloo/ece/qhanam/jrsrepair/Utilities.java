@@ -1,6 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,6 +11,18 @@ import java.util.Iterator;
 import org.apache.commons.io.FileUtils;
 
 public class Utilities {
+
+	/**
+	 * The copyDataFiles method recursively copies files from the given source
+	 * directory to the given destination directory.
+	 * @param source 	The source file directory.
+	 * @param destination	The class directory.
+	 * @param fileFilter	Specifies files to include or exclude from the copy.
+	 * @throws Exception 
+	 */
+	public static void copyDataFiles(File sourceFolder, File classFolder, FileFilter fileFilter) throws Exception{
+		FileUtils.copyDirectory(sourceFolder, classFolder, fileFilter);
+	}
 	
 	/**
 	 * The copyFiles method recursively replaces all the .class files in the
@@ -48,7 +61,6 @@ public class Utilities {
                 //Files.move(sourceFilePath, destinationFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
-		
 	}
 	
 	/**

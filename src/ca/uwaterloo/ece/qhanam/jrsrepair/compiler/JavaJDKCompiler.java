@@ -1,6 +1,7 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair.compiler;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -21,14 +22,22 @@ public class JavaJDKCompiler {
 	private String classDirectory;
 	private String[] classpath;
 	private Queue<String> errors;
+	private String[] copyIncludes;
+	private String[] copyExcludes;
 	
-	public JavaJDKCompiler(String classDirectory, String[] classpath, Map<String, DocumentASTRewrite> sourceFileContents, String[] sourcePaths){
+	public JavaJDKCompiler(String classDirectory, String[] classpath, 
+						   Map<String, DocumentASTRewrite> sourceFileContents, 
+						   String[] sourcePaths, String[] copyIncludes,
+						   String[] copyExcludes
+						){
 		this.classDirectory = classDirectory;
 		this.classpath = classpath;
 		this.mcl = null;
 		this.errors = new LinkedList<String>();
 		this.sourceFileContents = sourceFileContents;
 		this.sourcePaths = sourcePaths;
+		this.copyIncludes = copyIncludes;
+		this.copyExcludes = copyExcludes;
 	}
 	
 	/**
@@ -60,6 +69,17 @@ public class JavaJDKCompiler {
 	    /* Write the class files to disk. */
 	    this.errors.add("Compiled");
 	    this.storeCompiled(this.classDirectory);
+	    
+	    /* Copy data files to be packaged with class files. If copyIncludes is
+	     * empty, don't copy anything. */
+	    if(this.copyIncludes.length > 0){
+            JavaSourceFilter javaSourceFilter = new JavaSourceFilter(this.copyIncludes, this.copyExcludes);
+            
+            for(String sourcePath : this.sourcePaths) {
+                Utilities.copyDataFiles(new File(sourcePath), new File(this.classDirectory), javaSourceFilter);
+            }
+	    }
+	    
         return Status.COMPILED;
 	}
 	
@@ -161,6 +181,40 @@ public class JavaJDKCompiler {
 	 */
 	public enum Status{
 		NOT_COMPILED, COMPILED
+	}
+
+	private class JavaSourceFilter implements FileFilter {
+		
+		String[] includes;
+		String[] excludes;
+		
+		public JavaSourceFilter(String[] includes, String[] excludes){
+			this.includes = includes;
+			this.excludes = excludes;
+		}
+		
+		public boolean accept(File pathname){
+			
+			/* If includes is empty, nothing can match. */
+			if(includes.length == 0) return false;
+
+			/* Include condition. */
+			for(String include : this.includes){
+				if(!pathname.getName().matches(include)){
+					return false;
+				}
+			}
+			
+			/* Exclude condition. */
+			for(String exclude : this.excludes){
+				if(pathname.getName().matches(exclude)){
+					return false;
+				}
+			}
+
+			return true;
+		}
+		
 	}
 	
 }

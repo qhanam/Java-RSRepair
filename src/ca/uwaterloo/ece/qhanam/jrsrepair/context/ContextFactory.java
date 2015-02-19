@@ -144,9 +144,13 @@ public class ContextFactory {
     	String[] classDirectories;
     	if(properties.containsKey("class_destination_directories")) classDirectories = unpackArray(properties.getProperty("class_destination_directories"));
     	else classDirectories = new String[] {};
+
+    	/* nullMutationOnly is optional (for multiple output directories) */
+    	boolean nullMutationOnly = false;
+    	if(properties.containsKey("null_mutation_only")) nullMutationOnly = Boolean.parseBoolean(properties.getProperty("null_mutation_only"));
         
         /* Build a RepairContext object. */
-        return new RepairContext(mutationCandidates, mutationGenerations, mutationAttempts, buildDirectory, revertFailedCompile, classDirectories);
+        return new RepairContext(mutationCandidates, mutationGenerations, mutationAttempts, buildDirectory, revertFailedCompile, classDirectories, nullMutationOnly);
 	}
 	
 	/**
@@ -206,9 +210,15 @@ public class ContextFactory {
         /* Get the location for the class files. */
 		if(!properties.containsKey("class_directory")) throw new Exception("Parameter 'class_directory' not found in properties");
     	String classDirectory = properties.getProperty("class_directory");
+
+        /* Get the source folder copy includes and excludes regular expressions. */
+    	String[] copyIncludes = new String[] {};
+    	String[] copyExcludes = new String[] {};
+		if(properties.containsKey("copy_source_includes")) copyIncludes = unpackArray(properties.getProperty("copy_source_includes"));
+		if(properties.containsKey("copy_source_excludes")) copyExcludes = unpackArray(properties.getProperty("copy_source_excludes"));
 		
     	/* Make the compiler we will use. */
-        JavaJDKCompiler compiler = new JavaJDKCompiler(classDirectory, classpaths, sourceFileContents, sourcepaths);
+        JavaJDKCompiler compiler = new JavaJDKCompiler(classDirectory, classpaths, sourceFileContents, sourcepaths, copyIncludes, copyExcludes);
         
         return new CompilerContext(compiler);
 	}

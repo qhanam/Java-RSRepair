@@ -263,8 +263,7 @@ public class ContextFactory {
                 if(!properties.containsKey("ant_path")) throw new Exception("Parameter 'ant_path' not found in properties");
                 if(!properties.containsKey("ant_test_target")) throw new Exception("Parameter 'ant_test_target' not found in properties");
 
-                testExecutor = new AntTestExecutor(10000,
-                								   new File(properties.getProperty("ant_base_dir")), 
+                testExecutor = new AntTestExecutor(new File(properties.getProperty("ant_base_dir")), 
                                                    properties.getProperty("ant_path"), 
                                                    properties.getProperty("ant_test_target"));
             	break;
@@ -272,8 +271,7 @@ public class ContextFactory {
                 if(!properties.containsKey("bash_script_base_dir")) throw new Exception("Parameter 'bash_script_base_dir' not found in properties");
                 if(!properties.containsKey("bash_script_path")) throw new Exception("Parameter 'bash_script_path' not found in properties");
                 
-                testExecutor = new BashTestExecutor(10000,
-                									new File(properties.getProperty("bash_script_base_dir")),
+                testExecutor = new BashTestExecutor(new File(properties.getProperty("bash_script_base_dir")),
                 									properties.getProperty("bash_script_path"));
             	break;
 			default:

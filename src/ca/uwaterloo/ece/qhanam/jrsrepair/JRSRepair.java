@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext;
-import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext.MutationType;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
@@ -158,14 +157,21 @@ public class JRSRepair {
         	/* We may also need to copy the .class files back to their 
              * class folders (for example, if we have a complex Maven
              * this just makes life easier than re-building ourselves). */
+        	// FIXME: There might be a bug here... 
+        	System.out.print("...Copying files...");
             if(this.context.repair.classDirectories.length > 0){
                 for(String directory : this.context.repair.classDirectories){
                     Utilities.copyFiles(new File(this.context.repair.buildDirectory.getPath() + "/classes"), new File(directory));
                 }
             }
+        	System.out.print("...Copied!...");
 
             /* Run the test cases. */
-            testStatus = this.context.test.runTests();
+        	if(candidate == 94) {
+                testStatus = this.context.test.runTests();
+        	} else {
+                testStatus = this.context.test.runTests();
+        	}
 
             /* Log what happened. If all tests passed, store the class files. */
             if(testStatus == AbstractTestExecutor.Status.PASSED) {
@@ -177,7 +183,6 @@ public class JRSRepair {
             else if(testStatus == AbstractTestExecutor.Status.ERROR) 
                 System.out.print(" Error - tests may not have run.\n");
         }
-        
     
         /* Recurse to the next level of mutations. */
         if(generation < this.context.repair.generations){ 

@@ -1,8 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 
 /**
  * AntTestExecutor compiles and runs the JUnit tests for the program under repair using
@@ -16,7 +14,8 @@ public class AntTestExecutor extends AbstractTestExecutor {
 	private String antPath;
 	private String antTestTarget;
 
-	public AntTestExecutor(File baseDirectory, String antPath, String antTestTarget){
+	public AntTestExecutor(long timeout, File baseDirectory, String antPath, String antTestTarget){
+		super(timeout);
 		this.baseDirectory = baseDirectory;
 		this.antPath = antPath;
 		this.antTestTarget = antTestTarget;
@@ -27,45 +26,21 @@ public class AntTestExecutor extends AbstractTestExecutor {
 	 * @return NOT_COMPILED = failed to compile, TESTS_FAILED = failed one or more test cases, TESTS_PASSED = passed all test cases
 	 * @throws Exception
 	 */
-	public Status runTests() throws Exception{
-	    
-	    /* The program has successfully compiled, so run the JUnit tests. */
+	public Process runTests() throws Exception {
         ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
         builder.directory(this.baseDirectory);
         Process process = builder.start();
-        
-        BufferedReader stdInput = new BufferedReader(new 
-                   InputStreamReader(process.getInputStream()));
-
-        BufferedReader stdError = new BufferedReader(new 
-            InputStreamReader(process.getErrorStream()));
-
-        /* Read the output from the command. */
-        String output = "";
-        String s = null;
-        while ((s = stdInput.readLine()) != null) {
-            output += s;
-        }
-
-        String errors = "";
-        s = null;
-        while ((s = stdError.readLine()) != null) {
-            errors += s;
-        }
-        
-        try{
-          process.waitFor();
-          
+        return process;
+	}
+	
+	/**
+	 * Process the output captured from the process. 
+	 * @param output The data written to stdout.
+	 * @param errors The data written to stderr.
+	 */
+	protected void processOutput(String output, String errors) {
           /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return Status.PASSED;
-          if(errors.indexOf("BUILD FAILED") >= 0) return Status.FAILED;
-
-        }catch(InterruptedException e){ 
-          System.out.println("Interrupted Exception during JUnit run.");
-          throw e;
-        }
-
-        /* The program compiled, but failed one or more test cases. */
-        return Status.ERROR;
+          if(output.indexOf("BUILD SUCCESSFUL") >= 0) this.status = Status.PASSED;
+          if(errors.indexOf("BUILD FAILED") >= 0) this.status = Status.FAILED;
 	}
 }

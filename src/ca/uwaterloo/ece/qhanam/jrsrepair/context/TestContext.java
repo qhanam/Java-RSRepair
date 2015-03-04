@@ -21,7 +21,8 @@ public class TestContext {
 	 * @throws Exception
 	 */
 	public AbstractTestExecutor.Status runTests() throws Exception {
-		return this.testExecutor.runTests();
+		this.testExecutor.run();
+		return this.testExecutor.getStatus();
 	}
 
 }

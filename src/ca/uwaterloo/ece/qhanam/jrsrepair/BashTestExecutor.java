@@ -30,31 +30,25 @@ public class BashTestExecutor extends AbstractTestExecutor {
 	    /* The program has successfully compiled, so run the JUnit tests. */
         ProcessBuilder builder = new ProcessBuilder(this.scriptPath);
         builder.directory(this.baseDirectory);
-        builder.redirectErrorStream(true); // Merge stderr into stdout
+        builder.redirectErrorStream(true); // Merge stderr into stdout to prevent hang.
         Process process = builder.start();
         
         BufferedReader stdInput = new BufferedReader(new 
                    InputStreamReader(process.getInputStream()));
 
-//        BufferedReader stdError = new BufferedReader(new 
-//            InputStreamReader(process.getErrorStream()));
-
         /* Read the output from the command. */
-        String output = "", error = "";
-        String o = null, e = null;
-        System.out.print("...Reading test output...");
+        String output = "", o = null;
         while ((o = stdInput.readLine()) != null) {
             System.out.print(o);
             output += o;
         }
-        System.out.print("read!");
         
         try{
           process.waitFor();
           
           /* JUnit will output "FAILURES!!!" if one or more tests fail or error out.
            * If we want more details, we can look for this message: "Tests run: 4,  Failures: 1,  Errors: 0" */
-          if(output.indexOf("FAILURES!!!") >= 0 || error.indexOf("FAILURES!!!") >= 0) return Status.FAILED;
+          if(output.indexOf("FAILURES!!!") >= 0) return Status.FAILED;
           else return Status.PASSED;
 
         }catch(InterruptedException ie){ 

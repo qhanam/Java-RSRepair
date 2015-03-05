@@ -94,7 +94,14 @@ public class MutationASTRequestor extends FileASTRequestor {
 		private void insertStatement(Statement s){
 			/* Build the LCNode to check if this statement is in the line coverage. */
 			CompilationUnit cu = (CompilationUnit) s.getRoot();
-            String packageName = cu.getPackage().getName().toString();
+			String packageName = null;
+			if (cu.getPackage()==null) {
+				packageName = "";
+			}
+			else {
+				packageName = cu.getPackage().getName().toString();
+			}
+            packageName = cu.getPackage().getName().toString();
             String className = ((AbstractTypeDeclaration)cu.types().get(0)).getName().toString();
 			int lineNumber = cu.getLineNumber(s.getStartPosition());
 			LCNode node = new LCNode(packageName, className, lineNumber);

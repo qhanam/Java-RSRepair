@@ -1,8 +1,6 @@
 package ca.uwaterloo.ece.qhanam.jrsrepair;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 
 /**
  * AntTestExecutor compiles and runs the JUnit tests for the program under repair using
@@ -28,33 +26,35 @@ public class AntTestExecutor extends AbstractTestExecutor {
 	 * @throws Exception
 	 */
 	public Status runTests() throws Exception{
-	    
+
 	    /* The program has successfully compiled, so run the JUnit tests. */
         ProcessBuilder builder = new ProcessBuilder(this.antPath, this.antTestTarget);
         builder.directory(this.baseDirectory);
-        builder.redirectErrorStream(true); // Merge stderr into stdout to prevent hang.
+        builder.redirectErrorStream(true);
         Process process = builder.start();
-        
-        BufferedReader stdInput = new BufferedReader(new 
-                   InputStreamReader(process.getInputStream()));
+	    
+        /* Handle the output. */
+        StreamReaderThread streamReaderThread = new StreamReaderThread(process.getInputStream());
+        streamReaderThread.start();
 
-        /* Read the output from the command. */
-        String output = "", o = null;
-        while ((o = stdInput.readLine()) != null) {
-            output += o;
-        }
-        
-        try{
-          process.waitFor();
-          
-          /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
-          if(output.indexOf("BUILD SUCCESSFUL") >= 0) return Status.PASSED;
-          if(output.indexOf("BUILD FAILED") >= 0) return Status.FAILED;
+        /* Wait for the process to finish or timeout. */
+		ProcessWithTimeout processWithTimeout = new ProcessWithTimeout(process);
+		int exitCode = processWithTimeout.waitForProcess(10000);
 
-        }catch(InterruptedException ie){ 
-          System.out.println("Interrupted Exception during JUnit run.");
-          throw ie;
-        }
+		/* Handle the result. */
+		if (exitCode == Integer.MIN_VALUE)
+		{
+		    return Status.FAILED;
+		}
+		else
+		{
+			streamReaderThread.join(100);
+			String output = streamReaderThread.getOutput();
+			
+            /* If the script output contains "BUILD SUCCESSFUL", then the program has passed all the test cases (if failonerror is on). */
+            if(output.indexOf("BUILD SUCCESSFUL") >= 0) return Status.PASSED;
+            if(output.indexOf("BUILD FAILED") >= 0) return Status.FAILED;
+		}
 
         /* The program compiled, but failed one or more test cases. */
         return Status.ERROR;

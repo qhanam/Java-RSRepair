@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext;
-import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext.MutationType;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {

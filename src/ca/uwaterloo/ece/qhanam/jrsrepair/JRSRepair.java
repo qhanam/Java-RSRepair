@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import ca.uwaterloo.ece.qhanam.jrsrepair.compiler.JavaJDKCompiler;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext;
+import ca.uwaterloo.ece.qhanam.jrsrepair.context.MutationContext.MutationType;
 import ca.uwaterloo.ece.qhanam.jrsrepair.mutation.*;
 
 public class JRSRepair {
@@ -118,9 +119,9 @@ public class JRSRepair {
                     
                     /* Check if all the variables are in scope in the new AST. */
                     if(this.context.parser.checkScope(mutation.getRewriter())) break;
-                    
+
                     mutation.undo();
-                    
+
                     /* Just in case... we should make sure we don't have an infinite loop. */
                     ctr++;
                     if(ctr > 1000) throw new Exception("Mutation search timed out after 1000 attempts without a passing scope check.");
@@ -151,8 +152,17 @@ public class JRSRepair {
         	} 
         	catch (Exception e) {
         		/* The scope checking phase may have timed out. Log and move to the next attempt. */
-        		System.out.print(e.getMessage());
+        		System.out.print(e.getMessage() + "\n");
         		compileStatus = JavaJDKCompiler.Status.NOT_COMPILED;
+        		
+        		/* If we are not reverting failed compiles, replace this mutation with the null mutation. */
+        		if(!this.context.repair.revertFailedCompile) {
+                    /* Get a random mutation operation to apply. */
+                    mutation = this.context.mutation.getRandomMutation(MutationType.NULL);
+                    
+                    /* Apply the mutation to the AST + Document. */
+                    mutation.mutate();
+        		}
         	}
 
             attemptCounter++;

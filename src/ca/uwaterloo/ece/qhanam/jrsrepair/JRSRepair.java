@@ -100,52 +100,59 @@ public class JRSRepair {
          * attempts set by the user. */
         do {
             
-            /* First we need to get a mutation that will likely compile. To do this
-             * we randomly select a mutation, apply the mutation to the AST to get
-             * a new document, parse the new document into an AST (having the parser
-             * attempt to resolve bindings) and finally check that all variables have
-             * bindings.*/
-        	int ctr = 0;
-            while(true){
+        	try {
+        		
+                /* First we need to get a mutation that will likely compile. To do this
+                 * we randomly select a mutation, apply the mutation to the AST to get
+                 * a new document, parse the new document into an AST (having the parser
+                 * attempt to resolve bindings) and finally check that all variables have
+                 * bindings.*/
+                int ctr = 0;
+                while(true){
 
-                /* Get a random mutation operation to apply. */
-                mutation = this.context.mutation.getRandomMutation(mutationType);
+                    /* Get a random mutation operation to apply. */
+                    mutation = this.context.mutation.getRandomMutation(mutationType);
+                    
+                    /* Apply the mutation to the AST + Document. */
+                    mutation.mutate();
+                    
+                    /* Check if all the variables are in scope in the new AST. */
+                    if(this.context.parser.checkScope(mutation.getRewriter())) break;
+                    
+                    mutation.undo();
+                    
+                    /* Just in case... we should make sure we don't have an infinite loop. */
+                    ctr++;
+                    if(ctr > 1000) throw new Exception("Mutation search timed out after 1000 attempts without a passing scope check.");
+                }
                 
-                /* Apply the mutation to the AST + Document. */
-                mutation.mutate();
+                this.logMutation(mutation, candidate, generation);
                 
-                /* Check if all the variables are in scope in the new AST. */
-                if(this.context.parser.checkScope(mutation.getRewriter())) break;
-                
-                mutation.undo();
-                
-                /* Just in case... we should make sure we don't have an infinite loop. */
-                ctr++;
-                if(ctr > 1000) throw new Exception("Mutation search timed out after 1000 attempts without a passing scope check.");
-            }
-            
-            this.logMutation(mutation, candidate, generation);
-            
-            /* Now that we have a mutation that is in-scope, we attempt to compile 
-             * the program. If the program compiles, we run the test cases. If it
-             * doesn't, we roll back the changes and loop to get another mutation. */
+                /* Now that we have a mutation that is in-scope, we attempt to compile 
+                 * the program. If the program compiles, we run the test cases. If it
+                 * doesn't, we roll back the changes and loop to get another mutation. */
 
-            compileStatus = this.context.compiler.compile();
-            
-            this.logCompileError(candidate, generation, this.context.compiler.dequeueCompileError());
-            
-            /* Did it compile? If it didn't we might need to undo the mutation before trying again.
-             * Either way, log what happened. */
-            if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED && this.context.repair.revertFailedCompile) {
-                System.out.print(" - Did not compile\n");
-                mutation.undo(); 
-            } else if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED) {
-                this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                System.out.print(" - Did not compile\n");
-            } else {
-                this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
-                System.out.print(" - Compiled!");
-            }
+                compileStatus = this.context.compiler.compile();
+                
+                this.logCompileError(candidate, generation, this.context.compiler.dequeueCompileError());
+                
+                /* Did it compile? If it didn't we might need to undo the mutation before trying again.
+                 * Either way, log what happened. */
+                if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED && this.context.repair.revertFailedCompile) {
+                    System.out.print(" - Did not compile\n");
+                    mutation.undo(); 
+                } else if(compileStatus == JavaJDKCompiler.Status.NOT_COMPILED) {
+                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                    System.out.print(" - Did not compile\n");
+                } else {
+                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
+                    System.out.print(" - Compiled!");
+                }
+        	} 
+        	catch (Exception e) {
+        		System.out.print(e.getMessage());
+        		compileStatus = JavaJDKCompiler.Status.NOT_COMPILED;
+        	}
 
             attemptCounter++;
 

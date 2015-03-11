@@ -150,6 +150,7 @@ public class JRSRepair {
                 }
         	} 
         	catch (Exception e) {
+        		/* The scope checking phase may have timed out. Log and move to the next attempt. */
         		System.out.print(e.getMessage());
         		compileStatus = JavaJDKCompiler.Status.NOT_COMPILED;
         	}

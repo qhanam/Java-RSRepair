@@ -162,6 +162,7 @@ public class JRSRepair {
                     
                     /* Apply the mutation to the AST + Document. */
                     mutation.mutate();
+                    this.patches.push("Candidate " + candidate + ", Generation " + generation + "\n" + mutation.toString());
         		}
         	}
 

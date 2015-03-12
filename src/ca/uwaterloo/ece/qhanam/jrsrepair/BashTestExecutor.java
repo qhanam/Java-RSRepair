@@ -37,7 +37,7 @@ public class BashTestExecutor extends AbstractTestExecutor {
 
         /* Wait for the process to finish or timeout. */
 		ProcessWithTimeout processWithTimeout = new ProcessWithTimeout(process);
-		int exitCode = processWithTimeout.waitForProcess(10000);
+		int exitCode = processWithTimeout.waitForProcess(30000);
 
 		/* Handle the result. */
 		if (exitCode == Integer.MIN_VALUE)

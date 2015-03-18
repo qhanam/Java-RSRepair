@@ -51,8 +51,8 @@ JRSRepair is used in the evaluation of [MFix](http://asset.uwaterloo.ca/MFix/), 
 
 * Localize the fault for the program under repair:
     * Collect code coverage of passing and failing test cases using a tool like [JaCoCo](http://www.eclemma.org/jacoco/)
-    * Assign a weight to each statement executed by the failing test cases. A simple metric is to assign a weight of 1.0 to statements that are only executed by failing test cases and 0.1 to statements that are executed by both failing and passing test cases. Better weighting can be achieved using a similarity coefficient such as Jaccard or Ochaiai. 
-* Create `faulty.cov`. This is the weighted list of potentially faulty statements using the ranked list of statements executed by the failing test case from step 1. These statements will be selected for mutation according to their weight.
+    * Assign a weight to each statement executed by the failing test cases. A simple metric is to assign a weight of 1.0 to statements that are only executed by failing test cases and 0.1 to statements that are executed by both failing and passing test cases. Better weighting can be achieved using a similarity coefficient such as Jaccard or Ochiai. 
+* Create `faulty.cov`. This is the weighted list of potentially faulty statements from step 1. These statements will be selected for mutation with probability directly proportional to their weight.
 * Create `seed.cov`. This is the set of statements executed by all test cases. These statements will be used for insertion and replacement mutations.
 * Set up the Ant build script (build.xml) for running the JUnit tests (Maven will generate this for you if your project uses Maven).
 * Check that the Ant JUnit runner fails for the faulty program and passes for the repaired program.

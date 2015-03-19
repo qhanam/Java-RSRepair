@@ -1,7 +1,5 @@
 package ca.uwaterloo.ece.qhanam.practice.lrucombined;
 
-import java.util.ArrayList;
-
 public class LRU {
 
 	/**

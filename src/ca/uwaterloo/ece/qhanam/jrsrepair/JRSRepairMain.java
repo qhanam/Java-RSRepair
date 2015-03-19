@@ -1,10 +1,9 @@
-package ca.uwaterloo.ece.qhanam.jrsrepair.test;
+package ca.uwaterloo.ece.qhanam.jrsrepair;
 
 import java.io.File;
 import java.io.FileReader;
 import java.util.Properties;
 
-import ca.uwaterloo.ece.qhanam.jrsrepair.*;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.Context;
 import ca.uwaterloo.ece.qhanam.jrsrepair.context.ContextFactory;
 
@@ -15,7 +14,7 @@ import ca.uwaterloo.ece.qhanam.jrsrepair.context.ContextFactory;
  * 
  * @author qhanam
  */
-public class SampleUse {
+public class JRSRepairMain {
 	
 	public static void main(String[] args) throws Exception {
 		if(args.length > 0){

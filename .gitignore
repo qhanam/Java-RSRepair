@@ -1,6 +1,10 @@
 bin/
 lib/
+target/
 sample/config/build/
+.classpath
+.settings
+.project
 .DS_Store
 *.class
 *.jar

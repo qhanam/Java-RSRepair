@@ -1,7 +1,6 @@
 package ca.uwaterloo.ece.qhanam.practice.lru;
 
 import java.util.Hashtable;
-import java.util.LinkedList;
 
 public class LRUCache {
 

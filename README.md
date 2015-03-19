@@ -1,26 +1,25 @@
 =======
 ## README ##
 
-JRSRepair is a research tool that attempts to repair a buggy program by randomly mutating it. It is essentially a Java implementation of the [RSRepair](http://qiyuhua.github.io/projects/rsrepair/) tool, which is a variation of the [GenProg](http://dijkstra.cs.virginia.edu/genprog/) automated program repair tool.
+JRSRepair is a research tool that attempts to repair a buggy program by randomly mutating it. It is essentially a Java implementation of the [RSRepair](http://qiyuhua.github.io/projects/rsrepair/) tool, which is a variation of the [GenProg](http://dijkstra.cs.virginia.edu/genprog/) automated program repair tool. The effectivness of search techniques like RSRepair is [questionable](http://dspace.mit.edu/bitstream/handle/1721.1/94337/MIT-CSAIL-TR-2015-003.pdf?sequence=1).
 
 ### Installation ###
 
-JRSRepair is an Eclipse plugin.
+JRSRepair is a Maven project.
 
-* Clone the source into a new folder
-* Import the project into Eclipse
-* Ensure Eclipse plug-in tools are installed
-* Create a directory called `lib\` and put the following libraries in it:
-    1. [commons-io-2.4.jar](http://commons.apache.org/proper/commons-io/download_io.cgi)
-    2. [commons-lang3-3.3.2.jar](http://commons.apache.org/proper/commons-lang/download_lang.cgi)
+* Install Apache Ant (needed to run the sample program).
+* Clone JRSRepair.
+* Build and install the project (`mvn clean install`).
+
+Optional: Create the Eclipse project files (`mvn eclipse:eclipse`).
 
 ### Configuring and Running ###
 
-JRSRepair comes with a sample program that will run JRSRepair (ca.uwaterloo.ece.qhanam.jrsrepair.test.SampleUse). This program can be executed from the command line and takes one argument -> the path to the configuration file. A sample configuration file can be found in `sample\config\jsrepair.properties`.
+JRSRepair comes with a sample program that will run JRSRepair (ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepairMain). This program can be executed from the command line and takes one argument -> the path to a configuration file. A sample configuration file can be found in `sample\config\jsrepair.properties`.
 
-Sample useage:
+To run JRSRepair from the command line through Maven:
 ```bash
-java ca.uwaterloo.ece.qhanam.jrsrepair.test.SampleUse /path/to/jrsrepair.properties
+mvn exec:java -Dexec.mainClass="ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepairMain" -Dexec.args="./sample/config/jrsrepair.properties"
 ```
 
 ### Directory Structure ###
@@ -57,5 +56,5 @@ JRSRepair is used in the evaluation of [MFix](http://asset.uwaterloo.ca/MFix/), 
 * Set up the Ant build script (build.xml) for running the JUnit tests (Maven will generate this for you if your project uses Maven).
 * Check that the Ant JUnit runner fails for the faulty program and passes for the repaired program.
 * Set up JRSRepair by editing jrsrepair.properties:
-* Use `the null_mutation_only` property to make sure JRSRepair compiles and runs the program under repair correctly without performing mutations.
-* Run JRSRepair. If you run JRSRepair more multiple times, increment the seed for the random number generator in between each run.
+* Use the `null_mutation_only` property to make sure JRSRepair compiles and runs the program under repair correctly without performing mutations.
+* Run JRSRepair. If you run JRSRepair multiple times, increment the seed for the random number generator in between each run.

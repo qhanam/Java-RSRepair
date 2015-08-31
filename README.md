@@ -3,7 +3,7 @@
 
 Java-RSRepair is a research tool that attempts to repair a buggy program by randomly mutating it. It is essentially a Java implementation of the [RSRepair](http://qiyuhua.github.io/projects/rsrepair/) tool, which is a variation of the [GenProg](http://dijkstra.cs.virginia.edu/genprog/) automated program repair tool. It is important to note that automated repair techniques such as RSRepair and GenProg define a repaired program as one where all test cases pass. The repairs these tools generate often simply avoid running the features of the program that produce the incorrect behaviour (see [this](http://dspace.mit.edu/bitstream/handle/1721.1/94337/MIT-CSAIL-TR-2015-003.pdf?sequence=1) paper). 
 
-While these tools often do not produce correct behaviour, they may still have applications (see [this](https://hal.inria.fr/hal-01054549/PDF/essay-automatic-repair.pdf) paper). For example, modifying a program to cause all test cases to pass by removing graphical features may be desirable in a system needs to be fault tolerant.
+While these tools often do not produce correct behaviour, they may still have applications (see [this](https://hal.inria.fr/hal-01054549/PDF/essay-automatic-repair.pdf) paper). For example, modifying a program to cause all test cases to pass by removing graphical features may be desirable if a system needs to be fault tolerant.
 
 Java-RSRepair is a flexible tool that allows researchers to experiment with various settings (e.g., turning mutation operations on or off) and can be easily customized (e.g., adding custom mutation operations).
 

@@ -13,6 +13,11 @@ Java-RSRepair is a Maven project.
 
 * Install Apache Ant (needed to run the sample program).
 * Clone Java-RSRepair.
+* Edit ./sample/config/jrsrepair.properties:
+   * Set `ant_path = [/path/to/ant]` (use `which ant` to find its location on linux)
+* Edit ./sample/config/build.xml:
+   * Set the value of `<property name="junit.jar" value="[/path/to/junit.jar]">`
+   * Set the value of `<property name="hamcrest-all.jar" value="[/path/to/hamcrest-all.jar]">`
 * Build and install the project (`mvn clean install`).
 
 Optional: Create the Eclipse project files (`mvn eclipse:eclipse`).
@@ -23,7 +28,7 @@ Java-RSRepair comes with a sample program that will run Java-RSRepair (ca.uwater
 
 To run Java-RSRepair from the command line through Maven:
 ```bash
-mvn exec:java -Dexec.mainClass="ca.uwaterloo.ece.qhanam.jrsrepair.Java-RSRepairMain" -Dexec.args="./sample/config/jrsrepair.properties"
+mvn exec:java -Dexec.mainClass="ca.uwaterloo.ece.qhanam.jrsrepair.JRSRepairMain" -Dexec.args="./sample/config/jrsrepair.properties"
 ```
 
 ### Directory Structure ###

@@ -20,7 +20,7 @@ public class TestRepair extends TestCase {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		System.setOut(new PrintStream(baos));
 		
-        JRSRepair repair = JRSRepairMain.readConfigFile(new File("./sample/config/jrsrepair.properties"));
+        JRSRepair repair = JRSRepairMain.readConfigFile(new File("/Users/qhanam/Repositories/Java-RSRepair/sample/config/jrsrepair.properties"));
         repair.buildASTs();
         repair.repair();
         
